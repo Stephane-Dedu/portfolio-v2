@@ -1,0 +1,30 @@
+---
+import { useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  items: { done: boolean; text: string }[];
+  lang?: Lang;
+}
+const { items, lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+const done = items.filter((item) => item.done).length;
+---
+
+<div class="not-prose my-8 rounded-lg border border-line bg-surface p-5 font-mono text-sm">
+  <p class="label mb-3">{done}/{items.length} {t('checklist.done')}</p>
+  <ul class="space-y-1.5">
+    {
+      items.map((item) => (
+        <li class:list={['flex gap-3', item.done ? 'text-fg' : 'text-muted']}>
+          <span class:list={['shrink-0', item.done ? 'text-ok' : 'text-faint']} aria-hidden="true">
+            {item.done ? '[x]' : '[ ]'}
+          </span>
+          <span>
+            <span class="sr-only">{item.done ? t('checklist.doneSr') : t('checklist.todoSr')}</span>
+            {item.text}
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+</div>

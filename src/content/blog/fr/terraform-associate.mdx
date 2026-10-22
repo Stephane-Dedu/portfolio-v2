@@ -1,0 +1,31 @@
+---
+title: "Terraform Associate : bachotage ?"
+excerpt: "La certification Terraform Associate apprend-elle réellement à architecturer en code, ou est-ce juste du bachotage ?"
+date: 2026-01-20
+tags: [Terraform, IaC, Certification]
+---
+## L'objectif de la certification
+
+Pour déployer mon application sur AWS, j'ai adopté une approche IaC (Infrastructure as Code) afin de versionner et coder mon infrastructure. En poursuivant ma route vers le DevOps et le SRE, je me suis dit que passer la certification Terraform Associate serait une excellente étape et un jalon significatif à atteindre.
+
+## Théorie vs Pratique : le constat
+
+Cependant, lors de mon apprentissage, un constat s'est vite imposé. Après avoir lu toute la documentation et passé un premier examen blanc (avec un score honorable de 65%), je me suis rendu compte devant mon IDE que je ne savais pas écrire une seule ligne de Terraform [sans IA ;)].
+
+Je comprenais parfaitement les concepts théoriques comme le *remote state* ou le *locking*, mais j'étais incapable de concevoir l'architecture du code, d'organiser les modules ou de définir les outputs.
+
+## La leçon à retenir
+
+J'ai réalisé que la théorie apprise pour la certification est utile, voire indispensable : elle enseigne des concepts qui restent souvent cachés derrière des couches d'abstraction si l'on se contente d'écrire du code sans comprendre ce qui se passe en coulisses.
+
+Mais la réflexion inverse est tout aussi vraie : si l'on ne se concentre que sur la théorie, on risque le syndrome de la page blanche au moment de passer à la pratique.
+
+En conclusion, cette certification m'a rappelé une leçon essentielle : il est crucial de maîtriser son sujet théorique (documentation, concepts), mais tout aussi important de pratiquer intensément (hands-on, labs). C'est cette combinaison qui permet d'être réellement efficace, et je pense que ce principe s'applique à énormément de technologies et de compétences.
+
+## Un écosystème en évolution
+
+La certification permet aussi de se mettre à jour sur les dernières bonnes pratiques que l'on pourrait rater en restant sur ses acquis. Par exemple, l'utilisation des blocs `import` combinés à l'option `-generate-config-out` du plan simplifie grandement l'importation de ressources existantes, générant automatiquement le code HCL et remplaçant avantageusement les commandes CLI manuelles fastidieuses.
+
+De plus, elle ouvre les yeux sur **HCP Terraform** (anciennement Terraform Cloud). On y découvre des outils puissants comme l'intégration native avec **Vault** pour les secrets, ou l'utilisation des **Variable Sets** pour standardiser les configurations à l'échelle de l'organisation. Ce sont des aspects "Enterprise" cruciaux que l'on n'apprend pas forcément en bidouillant seul sur des projets perso.
+
+Merci pour votre lecture ! ;)

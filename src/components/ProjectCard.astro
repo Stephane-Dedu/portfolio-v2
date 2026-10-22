@@ -1,0 +1,60 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { entrySlug, localize, useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  lang: Lang;
+  wide?: boolean;
+}
+const { project, lang, wide = false } = Astro.props;
+const t = useTranslations(lang);
+const slug = entrySlug(project.id);
+const { title, summary, tags, status, scope, year, facts } = project.data;
+---
+
+<a
+  href={localize(lang, `/projects/${slug}`)}
+  data-tags={tags.join('|')}
+  data-reveal
+  class:list={[
+    'spotlight group flex flex-col justify-between gap-8 rounded-xl border border-line bg-surface p-5 transition-colors duration-300 hover:border-faint sm:p-6',
+    wide && 'md:col-span-2',
+  ]}
+  style={`view-transition-name: card-${slug}`}
+>
+  <div class="flex items-start justify-between gap-4">
+    <span class="label">{year} · {t(`scope.${scope}` as const)}</span>
+    {status === 'wip' && <span class="label rounded-full border border-line px-2 py-0.5">{t('card.wip')}</span>}
+  </div>
+  <div class:list={[wide && 'md:grid md:grid-cols-[1.1fr_1fr] md:gap-10']}>
+    <div>
+      <h3
+        class:list={['font-bold tracking-tight', wide ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl']}
+        style={`view-transition-name: project-${slug}`}
+      >
+        {title}
+      </h3>
+      <p class="mt-2 max-w-[60ch] text-sm leading-relaxed text-muted">{summary}</p>
+    </div>
+    <ul class:list={['space-y-1 text-[13px]', wide ? 'mt-5 md:mt-1' : 'mt-5']} aria-label={t('card.facts')}>
+      {
+        facts.map((fact) => (
+          <li class="flex gap-2">
+            <span class="text-accent" aria-hidden="true">→</span>
+            <span>{fact}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <ul class="flex flex-wrap gap-1.5" aria-label={t('card.tech')}>
+      {tags.map((tag) => <li class="label rounded border border-line px-1.5 py-0.5">{tag}</li>)}
+    </ul>
+    <span class="label inline-flex items-center gap-1 group-hover:text-fg">
+      {t('card.view')}
+      <span class="transition-transform group-hover:translate-x-0.5" aria-hidden="true">→</span>
+    </span>
+  </div>
+</a>

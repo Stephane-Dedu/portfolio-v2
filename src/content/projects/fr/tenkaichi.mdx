@@ -1,0 +1,36 @@
+---
+title: Tenkaichi 3 dans le navigateur
+summary: Le petit serveur GCP derrière un side project pour jouer entre amis, où le round-trip est la seule propriété du serveur que les joueurs ressentent.
+status: live
+scope: side
+year: 2026
+order: 3
+facts:
+  - VM existante adoptée dans Terraform via des blocs import
+  - ~120 Mo de WebAssembly servis en ~8 Mo (Brotli)
+  - ~11 $/mois quand elle tourne
+tags: [GCP, Terraform, Compute Engine, Caddy, WebSocket, Route 53]
+links:
+  - { label: repo infra, href: 'https://github.com/Stephane-Dedu/tenkaichi-3-in-web-browser-infra' }
+  - { label: repo du jeu, href: 'https://github.com/Stephane-Dedu/tenkaichi-3-in-web-browser' }
+---
+
+## Le contexte
+
+C’est un side project rapide pour jouer entre amis, donc l’infra reste volontairement minimale. Le jeu tourne dans le navigateur de chaque joueur (WebAssembly + WebGL 2), depuis sa propre image disque, qui ne quitte jamais son PC : le serveur ne voit aucune donnée de jeu et ne fait aucune émulation.
+
+Il se contente de servir la page et le runtime derrière un mot de passe partagé, de relayer les inputs des joueurs (quelques centaines d’octets par frame) via un petit lobby Node en WebSocket, plus de l’UDP pour la version PC, et de garder une sauvegarde de départ commune dans un bucket public.
+
+## Les choix
+
+Le netplay est en lockstep : chaque frame attend l’input du partenaire, et chaque input fait l’aller-retour jusqu’au relais. Le verdict était donc clair : le round-trip est la seule propriété du serveur que les joueurs ressentent. L’e2-micro gratuite n’existe que dans quelques régions US, ce qui ajoute environ 100 ms par aller-retour depuis l’Europe, alors qu’une VM payante à Paris (`europe-west9`) ne coûte que quelques dollars, avec le network tier Premium pour une latence plus stable.
+
+Pour le reste, une e2-micro suffit largement : servir des fichiers statiques et relayer des inputs laisse le CPU quasiment à zéro, et les performances du jeu dépendent du PC et du navigateur de chaque joueur, pas du serveur. Une machine plus grosse coûterait plus cher pour exactement le même rendu. Caddy envoie les fichiers précompressés en Brotli, ce qui fait passer le module WebAssembly d’environ 120 Mo à environ 8 Mo, et une IP statique permet à l’adresse et à l’enregistrement DNS (Route 53) de survivre à un stop/start.
+
+## L’IaC, après coup
+
+La VM tournait déjà avant le Terraform : je l’ai adoptée avec des blocs `import`, de façon à ce que l’import ne change rien à l’existant (c’est exactement la feature dont je parlais dans [mon retour sur la Terraform Associate](/fr/blog/terraform-associate)). Le stockage vit dans une stack séparée, qui a créé le bucket de state et garde donc son propre state, et les vraies valeurs (tfvars, backend, clés SSH) restent dans des fichiers gitignorés, avec un `.example` à côté de chacun.
+
+## Les limites
+
+Le logiciel de la VM (Caddy, le relais) est installé par le script de déploiement de l’application, pas par Terraform, et une VM arrêtée continue de payer son disque et son IP réservée. Le bucket de la sauvegarde de base est public volontairement, puisque tous les joueurs partent de la même sauvegarde : il ne contient que cette sauvegarde et son manifest, et les navigateurs n’y ont jamais accès en écriture, alors que le bucket de state, lui, bloque tout accès public. Le disque de boot et les deux buckets sont protégés par un `prevent_destroy`.

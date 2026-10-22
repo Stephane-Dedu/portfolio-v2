@@ -1,0 +1,30 @@
+---
+interface Props {
+  type?: 'note' | 'warn';
+  title?: string;
+}
+const { type = 'note', title } = Astro.props;
+---
+
+<aside
+  class:list={[
+    'not-prose my-8 rounded-lg border p-5 text-[15px] leading-relaxed',
+    type === 'warn' ? 'callout-warn border-fg/25' : 'border-line bg-surface',
+  ]}
+>
+  {title && <p class="label mb-2 text-fg">{type === 'warn' ? '⚠ ' : ''}{title}</p>}
+  <div class="text-muted [&_li]:my-1 [&_strong]:text-fg [&_ul]:list-disc [&_ul]:pl-5">
+    <slot />
+  </div>
+</aside>
+
+<style>
+  /* Monochrome hazard stripes */
+  .callout-warn {
+    background: repeating-linear-gradient(
+      135deg,
+      transparent 0 10px,
+      color-mix(in oklab, var(--fg) 5%, transparent) 10px 11px
+    );
+  }
+</style>

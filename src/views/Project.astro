@@ -1,0 +1,82 @@
+---
+import { getEntry, render, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { entrySlug, localize, useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  lang: Lang;
+}
+const { project, lang } = Astro.props;
+const t = useTranslations(lang);
+const slug = entrySlug(project.id);
+const { title, summary, tags, status, scope, year, facts, links } = project.data;
+const { Content } = await render(project);
+const post = project.data.post ? await getEntry('blog', `${lang}/${project.data.post}`) : undefined;
+const allLinks = [
+  ...links,
+  ...(post ? [{ label: t('project.writeup'), href: localize(lang, `/blog/${entrySlug(post.id)}`) }] : []),
+];
+---
+
+<Base lang={lang} title={title} description={summary}>
+  <article class="mx-auto max-w-6xl px-4 pt-14 sm:px-6">
+    <a href={localize(lang, '/projects')} class="label hover:text-fg">{t('project.back')}</a>
+
+    <header class="mt-10 grid gap-10 border-b border-line pb-10 lg:grid-cols-[1fr_320px]">
+      <div>
+        <p class="label">
+          {year} · {t(`scope.${scope}` as const)} · {status === 'wip' ? t('card.wip') : t('project.live')}
+        </p>
+        <h1 class="mt-3 text-4xl font-bold tracking-tight sm:text-5xl" style={`view-transition-name: project-${slug}`}>
+          {title}
+        </h1>
+        <p class="mt-4 max-w-2xl leading-relaxed text-muted">{summary}</p>
+        <ul class="mt-6 space-y-1.5 text-sm" aria-label={t('card.facts')}>
+          {
+            facts.map((fact) => (
+              <li class="flex gap-2">
+                <span class="text-accent" aria-hidden="true">→</span>
+                {fact}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <dl class="grid content-start gap-5 text-sm">
+        <div>
+          <dt class="label">{t('project.stack')}</dt>
+          <dd class="mt-1.5 flex flex-wrap gap-1.5">
+            {tags.map((tag) => <span class="label rounded border border-line px-1.5 py-0.5">{tag}</span>)}
+          </dd>
+        </div>
+        {
+          allLinks.length > 0 && (
+            <div>
+              <dt class="label">{t('project.links')}</dt>
+              <dd class="mt-1.5 flex flex-col gap-1">
+                {allLinks.map((link) => {
+                  const external = link.href.startsWith('http');
+                  return (
+                    <a
+                      href={link.href}
+                      target={external ? '_blank' : undefined}
+                      rel={external ? 'noopener' : undefined}
+                      class="w-fit underline decoration-faint underline-offset-4 hover:text-accent"
+                    >
+                      {link.label} {external ? '↗' : '→'}
+                    </a>
+                  );
+                })}
+              </dd>
+            </div>
+          )
+        }
+      </dl>
+    </header>
+
+    <div class="article prose mx-auto mt-12">
+      <Content />
+    </div>
+  </article>
+</Base>

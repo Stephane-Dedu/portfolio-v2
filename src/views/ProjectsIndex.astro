@@ -1,0 +1,84 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { inLang, useTranslations, type Lang } from '../i18n/ui';
+import { isWide } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const projects = inLang(await getCollection('projects'), lang).sort((a, b) => a.data.order - b.data.order);
+const tags = [...new Set(projects.flatMap((p) => p.data.tags))].sort((a, b) => a.localeCompare(b));
+---
+
+<Base lang={lang} title={t('projects.title')} description={t('projects.description')}>
+  <section class="mx-auto max-w-6xl px-4 pt-14 sm:px-6 sm:pt-20">
+    <p class="label">{projects.length} {t('projects.count')}</p>
+    <h1 class="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{t('projects.title')}</h1>
+    <p class="mt-4 max-w-xl text-lg leading-relaxed text-muted">{t('projects.intro')}</p>
+
+    <div class="mt-10 flex flex-wrap gap-1.5" role="group" aria-label={t('projects.filter')}>
+      <button type="button" data-filter="" aria-pressed="true" class="filter label">{t('projects.all')}</button>
+      {
+        tags.map((tag) => (
+          <button type="button" data-filter={tag} aria-pressed="false" class="filter label">
+            {tag}
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+      {projects.map((project, i) => <ProjectCard project={project} lang={lang} wide={isWide(projects, i)} />)}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .filter {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    transition:
+      color 150ms,
+      border-color 150ms,
+      background-color 150ms;
+  }
+  .filter:hover {
+    color: var(--fg);
+    border-color: var(--faint);
+  }
+  .filter[aria-pressed='true'] {
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+  }
+</style>
+
+<script>
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-tags]')];
+
+  const apply = (filter: string) => {
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    cards.forEach((card) => {
+      card.hidden = Boolean(filter) && !(card.dataset.tags ?? '').split('|').includes(filter);
+    });
+  };
+
+  buttons.forEach((button) =>
+    button.addEventListener('click', () => {
+      const filter = button.dataset.filter ?? '';
+      // Same-document view transition animates the grid reflow where supported
+      if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.startViewTransition(() => apply(filter));
+      } else {
+        apply(filter);
+      }
+    }),
+  );
+</script>

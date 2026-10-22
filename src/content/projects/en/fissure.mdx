@@ -1,0 +1,36 @@
+---
+title: Fissure
+summary: The infrastructure of my mobile app, moved from a public EC2 instance with a Security Group open on every port to ECS Fargate and Multi-AZ RDS in private subnets, all in Terraform.
+status: live
+scope: prod
+year: 2026
+order: 1
+featured: true
+facts:
+  - Public EC2 → ECS Fargate behind an ALB
+  - Multi-AZ RDS PostgreSQL across 2 AZs, in private subnets
+  - Compute from ~$30/month fixed to ~$8-15/month
+tags: [AWS, ECS Fargate, RDS Multi-AZ, ALB, ECR, VPC, Terraform]
+links:
+  - { label: app landing page, href: 'https://landing-page-fissure-4adi.vercel.app/' }
+post: fissure-retex
+---
+import FissureScrolly from '../../../components/FissureScrolly.astro';
+
+## Context
+
+Fissure is a mobile app to track calories and workouts in one place, with Gemini to make the data easier to log (React Native and Expo for the app, ExpressJS with a clean architecture for the back end, PostgreSQL for the data). It is while trying to deploy it that I got hooked on the Cloud, and the interesting part here is not the app itself: it is the path from a catastrophic first deployment to the current infrastructure.
+
+The constraints were those of a personal project: a tight budget, the wish to keep control of the infrastructure rather than going fully serverless, and very little networking knowledge at the start. Scroll down, the architecture rebuilds itself step by step.
+
+<FissureScrolly />
+
+## What I took from it
+
+Security has to be designed in from the start (private subnets, IAM roles, encryption), because it is much harder to add afterwards. Deploying by hand over SSH was a nightmare: Terraform and automatic deployments through ECR transformed my workflow and make rollbacks possible in minutes. And an always-on instance costs a lot even without traffic, which taught me to track costs from day one with Cost Explorer.
+
+## What's left
+
+The next version will add an S3 bucket with image resizing through Lambda, and a cache layer with ElastiCache Redis.
+
+The code is private: the full write-up, with the mistakes of the first deployment and the cost breakdown, is [on the blog](/blog/fissure-retex).

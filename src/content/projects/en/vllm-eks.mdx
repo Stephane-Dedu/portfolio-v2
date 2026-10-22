@@ -1,0 +1,87 @@
+---
+title: vLLM on EKS
+summary: Running an LLM on an AWS GPU cluster in the cleanest, most maintainable and most reliable way possible, on a side-project budget.
+status: wip
+scope: lab
+year: 2026
+order: 2
+facts:
+  - 9 ADRs documenting every choice and what it costs
+  - EKS 1.34 in Terraform, platform in GitOps (ArgoCD App-of-Apps)
+  - ~$10/month with tear-down, versus ~$700 on-demand 24/7
+tags: [AWS EKS, Terraform, ArgoCD, KEDA, Prometheus, vLLM, GPU spot]
+links:
+  - { label: repo, href: 'https://github.com/Stephane-Dedu/vLLM-inference-EKS' }
+  - { label: the 9 ADRs, href: 'https://github.com/Stephane-Dedu/vLLM-inference-EKS/blob/main/docs/DECISIONS.md' }
+---
+import Checklist from '../../../components/Checklist.astro';
+import ThemedImage from '../../../components/ThemedImage.astro';
+import vllmDark from '../../../assets/projects/vllm-dark.png';
+import vllmLight from '../../../assets/projects/vllm-light.png';
+
+## Context
+
+Wanting to experiment with different technologies to keep learning Site Reliability Engineering, I started a vLLM inference project hosted on AWS, using good practices: GitOps, IaC, observability, stress testing and chaos engineering. The goal is fairly simple: run an LLM on an AWS GPU cluster in the cleanest, most maintainable and most reliable way possible (to serve a small RAG over puppy training transcripts).
+
+This project helps me understand how a Kubernetes cluster behaves in a "real" context, and look at the FinOps options to keep costs as low as possible without compromising the result. The constraints are therefore pretty clear: a budget of $15 to $20 a month at most, no real users to serve, and AWS GPU quotas that are not granted by default (a request to make on day one, with 24 to 72 hours of review).
+
+## Target architecture
+
+<ThemedImage
+  light={vllmLight}
+  dark={vllmDark}
+  alt="Diagram: single-AZ VPC in us-east-1, ALB and NAT Gateway in a public subnet, a CPU node group (Prometheus, Grafana, KEDA, rag-api, vector-db) and a GPU node group (vLLM) in a private subnet, with Hugging Face, S3 and ECR alongside."
+  caption="Target architecture, taken from the repo. The GPU node group and the RAG part are not deployed yet."
+/>
+
+## The choices, and what they cost
+
+Every structural decision is written as an ADR in the repo, with the rejected alternatives and the consequences, including the bad ones. Here is the gist.
+
+### Managed EKS rather than a kubeadm cluster
+
+Building a cluster from scratch is very rewarding, but I wanted my focus to be on SLOs, multi-burn-rate alerting, KEDA autoscaling on inference metrics and observability, rather than on control plane mechanics (etcd backups, certificate rotation, upgrading one version at a time). The price: about $73 a month for the control plane, and EKS Auto Mode ruled out because it would hide exactly the GPU node management I want to show.
+
+### Tearing everything down between sessions
+
+A GPU running 24/7 on-demand costs about $700 a month, so the whole infrastructure is destroyed with `terraform destroy` after each session and rebuilt at the start of the next one. Four four-hour sessions on spot come to about $10 a month, and this constraint has an interesting side effect: with no live state between sessions, versioning has to be rigorous, and the cold start (from `terraform apply` to the first token served) becomes an SLI in its own right.
+
+### A single AZ, in us-east-1
+
+There are no real users to justify the cost of a multi-AZ deployment, and I have already done multi-AZ on [Fissure](/projects/fissure). us-east-1 has the largest spot pool and the lowest prices, at the cost of about 100 ms of latency from France: an AZ outage means the service is down, and that is written down plainly in the ADR.
+
+### ArgoCD with App-of-Apps
+
+ArgoCD manages itself after an initial `helm install` (the well-known chicken-and-egg), then deploys KEDA and kube-prometheus-stack from Git, with the values versioned in the repo instead of forked charts. Honestly, for a single cluster and three charts, it is over-spec: a Makefile running `helm upgrade --install` would do the same job, and the tear-down forces ArgoCD to resync everything at every session. The choice is owned as a portfolio investment, not as an operational need.
+
+### Terraform state with native S3 locking
+
+I had already used S3 + DynamoDB on a previous project, so I wanted to try native S3 locking (Terraform 1.10+) to have an informed opinion on both patterns. In a team, however, I would stay on S3 + DynamoDB until Terraform 1.10+ is standard everywhere.
+
+### Kubernetes 1.34, i.e. N-1
+
+Mature enough for community charts to have validated their compatibility, recent enough to stay far from paid extended support. With the tear-down, changing versions comes down to editing one Terraform variable.
+
+## Where I am
+
+<Checklist
+  items={[
+    { done: true, text: '9 ADRs: cloud, EKS, model and GPU, region, costs, topology, state, GitOps, Kubernetes version' },
+    { done: true, text: 'Terraform: S3 state with native locking, single-AZ VPC, EKS 1.34 with a spot CPU node group' },
+    { done: true, text: 'GitOps: self-managed ArgoCD with App-of-Apps, KEDA 2.19 and kube-prometheus-stack 84.5' },
+    { done: true, text: 'vLLM Deployment: startupProbe for the cold start, GPU tolerations, model cache on a PVC' },
+    { done: false, text: 'GPU node group (g5.xlarge on spot, from 0 to 1)' },
+    { done: false, text: 'KEDA autoscaling on inference metrics' },
+    { done: false, text: 'SLOs and multi-window multi-burn-rate alerting' },
+    { done: false, text: 'Grafana dashboards' },
+    { done: false, text: 'k6 load tests' },
+    { done: false, text: 'Chaos: spot interruption' },
+    { done: false, text: 'RAG: ingestion, vector DB, API' },
+  ]}
+/>
+
+The vLLM Deployment currently serves Qwen3-4B-Instruct-2507 (vLLM v0.20.1, chunked prefill), with a startupProbe that gives the cold start up to five minutes and the Hugging Face cache on a 50&nbsp;Gi gp3 volume.
+
+## What I will measure
+
+No latency numbers here yet: I would rather show nothing until the GPU node group is running. The first planned SLIs are the cold start, from `terraform apply` to the first token served, then inference latency under load with k6, and spot interruptions will be the first chaos scenario.

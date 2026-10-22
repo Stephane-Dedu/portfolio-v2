@@ -1,0 +1,23 @@
+---
+title: sdedu.cloud
+summary: Ce site, statique, servi par S3 et CloudFront et déployé par GitHub Actions sans aucune clé AWS stockée.
+status: live
+scope: prod
+year: 2026
+order: 4
+facts:
+  - Déploiement GitHub Actions en OIDC, sans clé AWS stockée
+  - Assets hashés en cache immutable, HTML toujours revalidé
+  - JavaScript chargé uniquement là où il y a de l’interaction
+tags: [Astro, S3, CloudFront, GitHub Actions, OIDC]
+---
+
+## Le contexte
+
+La v1 était en Next.js avec Three.js, et préchargeait près de 600 fichiers de police à chaque visite (une police japonaise chargée avec tous ses sous-ensembles), ce qui résume assez bien le problème : beaucoup d’effets, et peu de maîtrise de ce qui part réellement vers le navigateur.
+
+## Les choix
+
+Cette v2 part sur Astro : le site est statique, et le JavaScript n’est chargé que là où il y a de l’interaction (le cluster simulé, la palette ⌘K, les nuages en fond). Une seule police est servie, découpée en sous-ensembles que le navigateur ne télécharge que s’il en a besoin.
+
+Le déploiement passe par GitHub Actions avec un rôle AWS assumé en OIDC, donc aucune clé d’accès n’est stockée dans le repo ni dans les secrets. Les assets hashés partent sur S3 avec un cache immutable d’un an, le HTML avec `max-age=0, must-revalidate`, puis une invalidation CloudFront termine le déploiement.

@@ -1,0 +1,36 @@
+---
+title: Fissure
+summary: L’infra de mon app mobile, passée d’une EC2 publique avec un Security Group ouvert sur tous les ports à ECS Fargate et RDS Multi-AZ en subnets privés, le tout en Terraform.
+status: live
+scope: prod
+year: 2026
+order: 1
+featured: true
+facts:
+  - EC2 publique → ECS Fargate derrière un ALB
+  - RDS PostgreSQL Multi-AZ sur 2 AZ, en subnets privés
+  - Compute de ~30 $/mois fixe à ~8-15 $/mois
+tags: [AWS, ECS Fargate, RDS Multi-AZ, ALB, ECR, VPC, Terraform]
+links:
+  - { label: landing de l’app, href: 'https://landing-page-fissure-4adi.vercel.app/' }
+post: fissure-retex
+---
+import FissureScrolly from '../../../components/FissureScrolly.astro';
+
+## Le contexte
+
+Fissure est une app mobile pour suivre ses calories et ses entraînements au même endroit, avec Gemini pour rendre les données plus faciles à saisir (React Native et Expo côté app, ExpressJS en clean architecture côté back, PostgreSQL pour les données). C’est en cherchant à la déployer que je me suis pris de passion pour le Cloud, et le plus intéressant ici n’est pas l’app elle-même : c’est le chemin entre un premier déploiement catastrophique et l’infra actuelle.
+
+Les contraintes étaient celles d’un projet perso : un budget serré, l’envie de garder la main sur l’infrastructure plutôt que de tout passer en serverless, et très peu de bases en réseau au départ. Fais défiler, l’architecture se reconstruit étape par étape.
+
+<FissureScrolly lang="fr" />
+
+## Ce que j’en retiens
+
+La sécurité se pense dès la conception (subnets privés, IAM roles, chiffrement), parce qu’elle est beaucoup plus difficile à ajouter après coup. Déployer à la main via SSH était un cauchemar : Terraform et les déploiements automatiques via ECR ont transformé mon workflow et rendent les rollbacks possibles en quelques minutes. Et une instance toujours allumée coûte cher même sans trafic, ce qui m’a appris à suivre les coûts dès le début avec Cost Explorer.
+
+## Ce qui reste
+
+La prochaine version ajoutera un bucket S3 avec redimensionnement d’images via Lambda, et une couche de cache avec ElastiCache Redis.
+
+Le code est privé : le retex complet, avec les erreurs du premier déploiement et le détail des coûts, est [sur le blog](/fr/blog/fissure-retex).

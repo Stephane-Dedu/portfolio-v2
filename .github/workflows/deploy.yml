@@ -1,0 +1,55 @@
+name: Deploy to S3 + CloudFront
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write # OIDC token for AWS
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Skipped until the repository variables below are set (Settings → Variables)
+    if: vars.S3_BUCKET != ''
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # Hashed assets are immutable; HTML must always revalidate
+      - name: Sync hashed assets
+        run: |
+          aws s3 sync dist/_astro "s3://${{ vars.S3_BUCKET }}/_astro" \
+            --cache-control "public,max-age=31536000,immutable" --delete
+
+      - name: Sync everything else
+        run: |
+          aws s3 sync dist/ "s3://${{ vars.S3_BUCKET }}" \
+            --exclude "_astro/*" \
+            --cache-control "public,max-age=0,must-revalidate" --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"

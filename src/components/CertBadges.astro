@@ -1,0 +1,38 @@
+---
+import CertIcon from './CertIcon.astro';
+import type { Lang } from '../i18n/ui';
+import { site } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const verifyLabel = lang === 'fr' ? 'vérifier sur Credly' : 'verify on Credly';
+---
+
+<ul class="grid grid-cols-1 gap-2 font-rounded min-[480px]:grid-cols-2" aria-label="Certifications">
+  {
+    site.certs.map((cert) => (
+      <li>
+        <a
+          href={cert.verify}
+          target="_blank"
+          rel="noopener"
+          aria-label={`${cert.name}, ${cert.issuer}, ${cert.issued[lang]} (${verifyLabel})`}
+          class="group flex h-full items-center gap-3.5 rounded-lg border border-line bg-bg/95 p-3 pr-4 backdrop-blur-sm transition-colors hover:border-faint"
+        >
+          <span class="grid size-11 shrink-0 place-items-center">
+            <CertIcon
+              name={cert.icon}
+              class="size-7 transition-transform duration-300 group-hover:scale-110"
+            />
+          </span>
+          <span class="min-w-0">
+            <span class="block text-base leading-snug font-bold">{cert.name}</span>
+            <span class="mt-1 block text-sm text-muted">{cert.issuer} · <span class="whitespace-nowrap">{cert.issued[lang]}</span></span>
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ul>

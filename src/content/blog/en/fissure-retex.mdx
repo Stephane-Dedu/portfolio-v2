@@ -1,0 +1,162 @@
+---
+title: "Fissure: From Catastrophic Deployment to Modern Infrastructure"
+excerpt: "The complete story of designing and deploying the infrastructure for my Fissure application, from the first idea to production."
+date: 2026-01-30
+tags: [AWS, DevOps, Architecture, Terraform]
+---
+import Callout from '../../../components/Callout.astro';
+
+## Context and objectives
+
+Fissure is a FullStack mobile application that allows tracking calories and workouts, all with a Gemini implementation to make data easier to track.
+
+This may seem very classic, but as someone who practices sports personally and pays attention to my diet, I made an observation: there's no application that's correct from both a design and price perspective that allows doing both at once, often forcing two applications or even two subscriptions for a single goal.
+
+## Technology choices
+
+After studying the different options, I opted for a clean architecture in ExpressJS, easy and quick to set up with good scalability.
+
+For the app's front-end, to be able to deploy on iOS and Android with the same code and a technology I was already efficient in, I chose React Native with Expo.
+
+For the database, PostgreSQL stood out as the obvious choice for its robustness, ACID compliance, and compatibility with the application's relational needs.
+
+## The first deployment: a lesson in humility
+
+After obtaining a satisfactory MVP, I sought to quickly deploy the app for testing. With little background in networking and Cloud, needless to say my first deployment was catastrophic.
+
+<Callout type="warn" title="What I did (do not reproduce)">
+- Public EC2 instance exposed on the Internet
+- Security Group configured with ingress rules open on all ports (0.0.0.0/0)
+- Manual deployment via SSH and git clone
+- Database stored on the instance's EBS volume
+- No network separation, everything in the public subnet
+</Callout>
+
+This approach was a security and maintainability nightmare. This experience made me realize the complexity of deploying resilient, scalable, and secure infrastructure.
+
+## Learning and questioning
+
+Wanting to have control over the infrastructure rather than a completely serverless solution, I started seriously investigating Cloud and DevOps topics (you can check [my post on the AWS SAA certification](/blog/aws-saa) to learn more ;) ).
+
+This questioning pushed me to study architecture best practices, network security, and deployment patterns in depth.
+
+## The final architecture
+
+After thoroughly studying the Cloud, I opted for a modern and secure architecture. Here are the main components:
+
+- **Compute**: ECS Fargate for serverless containerization. Automatic deployments via ECR on push, automatic scaling.
+- **Database**: RDS PostgreSQL Multi-AZ. Automatic backups, ACID compliance, high availability.
+- **Network security**: VPC with private subnets. ECS and RDS in private subnets, ALB in public, NAT Gateway for egress.
+- **Load balancing**: Application Load Balancer. Traffic distribution, health checks, SSL termination.
+
+The infrastructure is deployed on **2 Availability Zones** to ensure automatic failover and high availability. An S3 bucket with image resizing via Lambda will arrive in the next version.
+
+Layered architecture:
+
+1. **Presentation layer**: ALB distributing traffic
+2. **Application layer**: ECS Fargate in private subnets
+3. **Data layer**: RDS PostgreSQL Multi-AZ
+4. **Cache layer**: ElastiCache Redis (coming soon)
+5. **Monitoring layer**: CloudWatch for logs and metrics
+
+The animated version of this architecture is on [the project page](/projects/fissure).
+
+## Infrastructure as Code
+
+To manage infrastructure in a reproducible way, I used Terraform (see my opinion on [the Terraform Associate certification](/blog/terraform-associate)). This allowed me to:
+
+- Version all infrastructure
+- Facilitate deployments and rollbacks
+- Document architecture in code
+- Share and collaborate easily
+
+The Terraform module structure follows best practices with clear separation between environments (dev, staging, prod).
+
+<Callout title="Demo block for the prototype">
+The two code blocks below show how Expressive Code renders (file title, terminal frame, highlighted lines). Replace them with your real layout and commands.
+</Callout>
+
+```txt title="infra/"
+infra/
+├── modules/
+│   ├── network/   # VPC, subnets, NAT
+│   ├── ecs/       # cluster, Fargate service, ALB
+│   └── rds/       # PostgreSQL Multi-AZ
+└── envs/
+    ├── dev/
+    ├── staging/
+    └── prod/
+```
+
+```bash title="Terminal" {2}
+cd infra/envs/prod
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+## Security and compliance
+
+Security was an absolute priority. I implemented:
+
+- **IAM Roles**: principle of least privilege for all services
+- **Secrets Manager**: secure credential management
+- **WAF**: protection against common web attacks
+- **Encryption**: encryption at rest and in transit
+
+## Monitoring and observability
+
+To ensure system reliability, I set up comprehensive monitoring:
+
+**CloudWatch** for system and application metrics, **X-Ray** for distributed tracing, and **CloudWatch Logs** for centralized log aggregation.
+
+Alerts were configured for critical metrics (CPU, memory, latency, errors) with thresholds adapted to each environment.
+
+## Cost optimization
+
+Cost optimization was crucial for a personal project. Comparing my first deployment (always-on EC2) to the final architecture, I achieved huge savings.
+
+|                 | Before (EC2)            | After (Fargate)        |
+| --------------- | ----------------------- | ---------------------- |
+| Compute         | t3.medium instance 24/7 | ECS Fargate with scaling |
+| Cost            | ~$30/month fixed        | ~$8-15/month variable  |
+| Scaling         | None                    | Scale-to-zero possible |
+| Without traffic | Still paying            | Real pay-per-use       |
+
+Optimization strategies implemented:
+
+- **Smart auto-scaling**: ECS Fargate automatically scales based on CPU/memory load, allowing reduction to zero during off-peak periods
+- **Optimized RDS Multi-AZ**: db.t3.micro in dev, db.t3.small in prod, with automatic snapshots to reduce costs
+- **S3 lifecycle policies**: automatic transition to Glacier for old assets, 70% reduction on storage
+- **Cost monitoring**: AWS Cost Explorer with budget alerts to avoid surprises
+
+Overall: **~60% cost reduction** compared to the initial EC2 architecture.
+
+## Lessons learned
+
+This project taught me a lot about architecture and DevOps. Here are the lessons I learned from this adventure, from the first catastrophic deployment to the final architecture.
+
+### Start simple, iterate later
+
+My first EC2 deployment was a mistake, but it allowed me to quickly understand the challenges. Rather than over-architecting from the start, I learned to iterate: MVP → learning → improvement. This approach led me to the final architecture.
+
+### Theory without practice isn't enough
+
+Passing the AWS SAA certification gave me theoretical foundations, but it was by actually deploying that I understood the real challenges. As with Terraform, theory is essential but practice reveals the details hidden behind abstractions.
+
+### Security from the start, not after
+
+Configuring a Security Group open on all ports was a monumental mistake. I learned that security must be thought of from the design: private subnets, IAM roles, encryption. It's much harder to add afterward.
+
+### Automation is non-negotiable
+
+Deploying manually via SSH was a nightmare. Terraform and automatic deployments via ECR transformed my workflow. Automation reduces human errors and makes rollbacks possible in minutes.
+
+### Cloud costs can explode quickly
+
+An always-on EC2 instance costs a lot even without traffic. I learned to monitor costs from the start with Cost Explorer and use scaling to pay only for what I actually use.
+
+### Document as you go
+
+Terraform as living documentation, code comments, and this blog post. Documentation helps me understand my own past decisions and share my learnings.
+
+This infrastructure continuously evolves with application needs and newly acquired knowledge. Every mistake is a learning opportunity, and every improvement makes the system more robust.

@@ -1,0 +1,129 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { entrySlug, formatMonth, localize, readingTime, useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  newer?: CollectionEntry<'blog'>;
+  older?: CollectionEntry<'blog'>;
+  lang: Lang;
+}
+const { post, newer, older, lang } = Astro.props;
+const t = useTranslations(lang);
+const slug = entrySlug(post.id);
+const { title, excerpt, date, tags } = post.data;
+const { Content, headings } = await render(post);
+const toc = headings.filter((h) => h.depth === 2);
+---
+
+<Base lang={lang} title={title} description={excerpt}>
+  <div data-progress class="fixed inset-x-0 top-0 z-50 h-0.5 origin-left scale-x-0 bg-accent" aria-hidden="true"></div>
+
+  <article class="mx-auto max-w-6xl px-4 pt-14 sm:px-6">
+    <a href={localize(lang, '/blog')} class="label hover:text-fg">{t('post.back')}</a>
+
+    <header class="mt-10 max-w-3xl">
+      <p class="label">{formatMonth(date, lang)} · {readingTime(post.body)} {t('blog.read')}</p>
+      <h1
+        class="mt-3 text-3xl font-bold leading-tight tracking-tight text-balance sm:text-4xl"
+        style={`view-transition-name: post-${slug}`}
+      >
+        {title}
+      </h1>
+      <p class="mt-5 text-xl leading-relaxed text-muted">{excerpt}</p>
+      <p class="label mt-5 flex flex-wrap gap-x-3">{tags.map((tag) => <span>#{tag.toLowerCase()}</span>)}</p>
+    </header>
+
+    <div class="mt-12 grid gap-12 border-t border-line pt-12 lg:grid-cols-[minmax(0,1fr)_220px]">
+      <div class="article prose" data-article>
+        <Content />
+      </div>
+
+      {
+        toc.length > 1 && (
+          <aside class="hidden lg:block">
+            <nav class="sticky top-24" aria-label={t('post.tocLabel')}>
+              <p class="label mb-4">{t('post.toc')}</p>
+              <ol class="border-l border-line">
+                {toc.map((heading) => (
+                  <li>
+                    <a
+                      href={`#${heading.slug}`}
+                      data-toc={heading.slug}
+                      class="-ml-px block border-l border-transparent py-1.5 pl-4 text-sm leading-snug text-muted transition-colors hover:text-fg data-[active]:border-fg data-[active]:text-fg"
+                    >
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          </aside>
+        )
+      }
+    </div>
+
+    <nav class="mt-20 grid gap-4 border-t border-line pt-8 sm:grid-cols-2" aria-label={t('post.others')}>
+      {
+        older ? (
+          <a href={localize(lang, `/blog/${entrySlug(older.id)}`)} class="group rounded-lg p-1">
+            <span class="label">{t('post.prev')}</span>
+            <span class="mt-1 block font-medium transition-colors group-hover:text-accent">{older.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        newer && (
+          <a href={localize(lang, `/blog/${entrySlug(newer.id)}`)} class="group rounded-lg p-1 sm:text-right">
+            <span class="label">{t('post.next')}</span>
+            <span class="mt-1 block font-medium transition-colors group-hover:text-accent">{newer.data.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
+</Base>
+
+<script>
+  // Reading progress bar
+  const bar = document.querySelector<HTMLElement>('[data-progress]');
+  const article = document.querySelector<HTMLElement>('[data-article]');
+  let queued = false;
+  const update = () => {
+    queued = false;
+    if (!bar || !article) return;
+    const rect = article.getBoundingClientRect();
+    const total = rect.height - window.innerHeight * 0.6;
+    const progress = Math.min(1, Math.max(0, -rect.top / Math.max(1, total)));
+    bar.style.transform = `scaleX(${progress})`;
+  };
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (!queued) {
+        queued = true;
+        requestAnimationFrame(update);
+      }
+    },
+    { passive: true },
+  );
+  update();
+
+  // Table of contents scrollspy
+  const links = new Map(
+    [...document.querySelectorAll<HTMLElement>('[data-toc]')].map((link) => [link.dataset.toc, link]),
+  );
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        links.forEach((link, id) => link.toggleAttribute('data-active', id === entry.target.id));
+      }
+    },
+    { rootMargin: '-15% 0px -70% 0px' },
+  );
+  document.querySelectorAll('[data-article] h2[id]').forEach((heading) => observer.observe(heading));
+</script>

@@ -1,0 +1,31 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  light: ImageMetadata;
+  dark: ImageMetadata;
+  alt: string;
+  caption?: string;
+}
+const { light, dark, alt, caption } = Astro.props;
+---
+
+<figure class="not-prose my-10">
+  <div class="overflow-hidden rounded-lg border border-line">
+    <Image src={light} alt={alt} widths={[640, 1112]} sizes="(min-width: 768px) 720px, 100vw" class="themed-light block h-auto w-full" />
+    <Image src={dark} alt={alt} widths={[640, 1112]} sizes="(min-width: 768px) 720px, 100vw" class="themed-dark block h-auto w-full" />
+  </div>
+  {caption && <figcaption class="label mt-3">{caption}</figcaption>}
+</figure>
+
+<style>
+  .themed-dark {
+    display: none;
+  }
+  :global([data-theme='dark']) .themed-light {
+    display: none;
+  }
+  :global([data-theme='dark']) .themed-dark {
+    display: block;
+  }
+</style>

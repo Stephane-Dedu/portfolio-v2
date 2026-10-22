@@ -1,0 +1,68 @@
+---
+import { localize, otherLang, unlocalize, useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  /** Same page in the other language */
+  alternate: string;
+}
+const { lang, alternate } = Astro.props;
+const t = useTranslations(lang);
+const path = unlocalize(Astro.url.pathname);
+const nav = [
+  { path: '/projects', label: t('nav.projects') },
+  { path: '/blog', label: t('nav.blog') },
+];
+---
+
+<header
+  data-header
+  class="sticky top-0 z-40 border-b border-transparent bg-bg/80 backdrop-blur-md transition-colors duration-300 data-[scrolled]:border-line"
+>
+  <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <a href={localize(lang, '/')} class="font-mono text-sm tracking-tight" aria-label="sdedu.cloud">
+      sdedu<span class="text-muted">.cloud</span>
+    </a>
+    <nav class="flex items-center gap-1 sm:gap-2" aria-label="Main">
+      {
+        nav.map((link) => (
+          <a
+            href={localize(lang, link.path)}
+            aria-current={path.startsWith(link.path) ? 'page' : undefined}
+            class="label rounded px-2 py-1 transition-colors hover:text-fg aria-[current=page]:text-fg"
+          >
+            {link.label}
+          </a>
+        ))
+      }
+      <a
+        href={alternate}
+        hreflang={otherLang(lang)}
+        lang={otherLang(lang)}
+        aria-label={t('nav.lang')}
+        class="label rounded px-2 py-1 uppercase transition-colors hover:text-fg"
+      >
+        {otherLang(lang)}
+      </a>
+      <button
+        type="button"
+        data-open-palette
+        class="label ml-1 flex items-center gap-1.5 rounded-md border border-line px-2 py-1 transition-colors hover:border-faint hover:text-fg"
+        aria-label={t('nav.search')}
+      >
+        <span aria-hidden="true">⌘K</span>
+      </button>
+      <button
+        type="button"
+        data-theme-toggle
+        class="grid size-7 place-items-center rounded-md text-muted transition-colors hover:text-fg"
+        aria-label={t('nav.theme')}
+      >
+        <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+          <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"></path>
+        </svg>
+      </button>
+    </nav>
+  </div>
+</header>

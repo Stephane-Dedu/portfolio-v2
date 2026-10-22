@@ -1,0 +1,36 @@
+---
+title: Tenkaichi 3 in the browser
+summary: The small GCP server behind a side project for playing with friends, where round-trip time is the only server property players can feel.
+status: live
+scope: side
+year: 2026
+order: 3
+facts:
+  - Existing VM adopted into Terraform with import blocks
+  - ~120 MB of WebAssembly served as ~8 MB (Brotli)
+  - ~$11/month while running
+tags: [GCP, Terraform, Compute Engine, Caddy, WebSocket, Route 53]
+links:
+  - { label: infra repo, href: 'https://github.com/Stephane-Dedu/tenkaichi-3-in-web-browser-infra' }
+  - { label: game repo, href: 'https://github.com/Stephane-Dedu/tenkaichi-3-in-web-browser' }
+---
+
+## Context
+
+It is a quick side project for playing with friends, so the infrastructure stays deliberately minimal. The game runs in each player's browser (WebAssembly + WebGL 2), from that player's own disc image, which never leaves their PC: the server never sees game data and does no emulation.
+
+It only serves the page and the runtime behind a shared password, relays the players' inputs (a few hundred bytes per frame) through a small Node lobby over WebSocket, plus UDP for the PC version, and keeps one shared starting save in a public bucket.
+
+## The choices
+
+Netplay is lockstep: each frame waits for the partner's input, and every input travels to the relay and back. The verdict was therefore clear: round-trip time is the only server property players can feel. The free-tier e2-micro only exists in a few US regions, which adds about 100 ms per round trip from Europe, whereas a paid VM in Paris (`europe-west9`) only costs a few dollars, with the Premium network tier for steadier latency.
+
+For everything else, an e2-micro is more than enough: serving static files and relaying inputs keeps the CPU near idle, and game performance depends on each player's PC and browser, not on the server. A bigger machine would cost more and play exactly the same. Caddy sends the files precompressed with Brotli, which brings the WebAssembly module from about 120 MB down to about 8 MB, and a static IP lets the address and the DNS record (Route 53) survive a stop/start.
+
+## IaC, after the fact
+
+The VM was already running before the Terraform: I adopted it with `import` blocks, so that the import changes nothing on the existing setup (it is exactly the feature I mentioned in [my post on the Terraform Associate](/blog/terraform-associate)). Storage lives in a separate stack, which created the state bucket and therefore keeps its own state, and the real values (tfvars, backend, SSH keys) stay in gitignored files, each with an `.example` next to it.
+
+## Limits
+
+The VM's software (Caddy, the relay) is installed by the application's deploy script, not by Terraform, and a stopped VM still pays for its disk and its reserved IP. The base-save bucket is public on purpose, since every player starts from the same save: it only holds that save and its manifest, browsers never get write access, and the state bucket, on the other hand, blocks all public access. The boot disk and both buckets are protected by a `prevent_destroy`.

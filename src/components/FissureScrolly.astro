@@ -1,0 +1,470 @@
+---
+// Fissure's infrastructure, rebuilt step by step as the reader scrolls.
+// SVG layers carry data-in (first step shown) and optionally data-out (first step hidden).
+import type { Lang } from '../i18n/ui';
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = 'en' } = Astro.props;
+
+const copy = {
+  en: {
+    title: 'Fissure AWS architecture, from a public EC2 instance to ECS Fargate and Multi-AZ RDS',
+    steps: [
+      {
+        title: 'The catastrophic deployment',
+        body: 'A public EC2 instance, a Security Group open on every port to 0.0.0.0/0, a manual deployment over SSH and git clone, and the database on the instance’s EBS volume. Everything in the public subnet.',
+      },
+      {
+        title: 'Isolating the network',
+        body: 'A VPC split into public and private subnets across two Availability Zones. Whatever computes or stores data will never be reachable directly again.',
+      },
+      {
+        title: 'A single entry point',
+        body: 'An Application Load Balancer in the public subnets: traffic distribution, health checks, SSL termination. A NAT Gateway so the private side can reach out without being exposed.',
+      },
+      {
+        title: 'Compute without servers to manage',
+        body: 'ECS Fargate in the private subnets. Images are pushed to ECR, the deployment follows, and the service scales on CPU and memory load.',
+      },
+      {
+        title: 'Data that survives',
+        body: 'Multi-AZ RDS PostgreSQL: a primary instance, a synchronous standby in the other AZ, automatic backups and failover without intervention.',
+      },
+      {
+        title: 'Everything as code',
+        body: 'The whole setup is described in Terraform, in modules, with separate environments. Result: about 60% lower costs than the original EC2 instance.',
+      },
+    ],
+    hud: [
+      {
+        exposure: 'all ports · 0.0.0.0/0',
+        deploy: 'ssh + git clone',
+        data: 'instance EBS',
+        availability: '1 instance · 1 AZ',
+        cost: '~$30/month fixed',
+      },
+      { availability: '2 AZs' },
+      { exposure: 'ALB only' },
+      { deploy: 'push → ECR → ECS' },
+      { data: 'RDS Multi-AZ' },
+      { cost: '~$8-15/month' },
+    ],
+    hudLabels: { exposure: 'exposed', deploy: 'deployment', data: 'data', availability: 'availability', cost: 'cost' },
+    svg: {
+      open: '*:* open',
+      you: 'you',
+      postgres: 'postgres on ebs',
+      sg: 'sg 0.0.0.0/0 · all ports',
+      publicAll: 'public subnet · all exposed',
+      privateApp: 'private · app',
+      privateData: 'private · data',
+      backups: 'automated backups',
+    },
+  },
+  fr: {
+    title: 'Architecture AWS de Fissure, de l’EC2 publique à ECS Fargate et RDS Multi-AZ',
+    steps: [
+      {
+        title: 'Le déploiement catastrophique',
+        body: 'Une instance EC2 publique, un Security Group ouvert sur tous les ports en 0.0.0.0/0, un déploiement à la main via SSH et git clone, et la base de données sur le volume EBS de l’instance. Tout dans le subnet public.',
+      },
+      {
+        title: 'Isoler le réseau',
+        body: 'Un VPC découpé en subnets publics et privés, répartis sur deux Availability Zones. Ce qui calcule et ce qui stocke ne sera plus jamais joignable directement.',
+      },
+      {
+        title: 'Un seul point d’entrée',
+        body: 'Un Application Load Balancer dans les subnets publics : distribution du trafic, health checks, terminaison SSL. Une NAT Gateway pour que le privé puisse sortir sans être exposé.',
+      },
+      {
+        title: 'Compute sans serveur à gérer',
+        body: 'ECS Fargate dans les subnets privés. Les images sont poussées sur ECR, le déploiement suit, et le service scale selon la charge CPU et mémoire.',
+      },
+      {
+        title: 'Des données qui survivent',
+        body: 'RDS PostgreSQL en Multi-AZ : une instance primaire, une standby synchrone dans l’autre AZ, des backups automatiques et un failover sans intervention.',
+      },
+      {
+        title: 'Tout en code',
+        body: 'L’ensemble est décrit en Terraform, en modules, avec des environnements séparés. Résultat : environ 60 % de coûts en moins que l’EC2 du départ.',
+      },
+    ],
+    hud: [
+      {
+        exposure: 'tous ports · 0.0.0.0/0',
+        deploy: 'ssh + git clone',
+        data: 'EBS de l’instance',
+        availability: '1 instance · 1 AZ',
+        cost: '~30 $/mois fixe',
+      },
+      { availability: '2 AZ' },
+      { exposure: 'ALB uniquement' },
+      { deploy: 'push → ECR → ECS' },
+      { data: 'RDS Multi-AZ' },
+      { cost: '~8-15 $/mois' },
+    ],
+    hudLabels: { exposure: 'exposé', deploy: 'déploiement', data: 'données', availability: 'dispo', cost: 'coût' },
+    svg: {
+      open: '*:* ouvert',
+      you: 'toi',
+      postgres: 'postgres sur ebs',
+      sg: 'sg 0.0.0.0/0 · tous ports',
+      publicAll: 'subnet public · tout exposé',
+      privateApp: 'privé · app',
+      privateData: 'privé · data',
+      backups: 'backups auto',
+    },
+  },
+}[lang];
+
+const steps = copy.steps.map((step, i) => ({ version: `v${i}`, ...step }));
+// Each HUD entry only lists what changes at that step
+const hud = copy.hud;
+const hudLabels = Object.entries(copy.hudLabels);
+const c = copy.svg;
+
+const tasks = [
+  { x: 66, label: 'api' },
+  { x: 162, label: 'api' },
+  { x: 306, label: 'api' },
+  { x: 402, label: 'api' },
+];
+---
+
+<div
+  data-scrolly
+  data-hud={JSON.stringify(hud)}
+  class="not-prose scrolly my-16 flex flex-col gap-6 lg:flex-row-reverse lg:gap-14"
+>
+  <div
+    class="sticky top-14 z-10 -mx-4 bg-bg/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:top-[calc(50vh-17rem)] lg:mx-0 lg:w-[58%] lg:self-start lg:bg-transparent lg:p-0 lg:backdrop-blur-none"
+  >
+    <figure class="rounded-xl border border-line bg-surface p-2 sm:p-4">
+      <svg viewBox="0 0 680 500" role="img" aria-labelledby="scrolly-title" class="block h-auto w-full text-fg">
+        <title id="scrolly-title">{copy.title}</title>
+        <defs>
+          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="currentColor" stroke-width="1" opacity="0.22"></line>
+          </pattern>
+        </defs>
+
+        <!-- Always there -->
+        <rect class="frame" x="16" y="60" width="648" height="428" rx="12"></rect>
+        <text class="t" x="30" y="80">aws · region</text>
+        <g>
+          <rect class="node" x="290" y="12" width="100" height="30" rx="15"></rect>
+          <text class="t strong mid" x="340" y="31">internet</text>
+        </g>
+
+        <!-- v0: the public EC2 -->
+        <g data-in="0" data-out="1">
+          <line class="danger" x1="318" y1="42" x2="296" y2="190"></line>
+          <line class="danger" x1="340" y1="42" x2="340" y2="190"></line>
+          <line class="danger" x1="362" y1="42" x2="384" y2="190"></line>
+          <text class="t small" x="392" y="120">{c.open}</text>
+        </g>
+        <g data-in="0" data-out="1">
+          <rect class="node" x="40" y="226" width="120" height="48" rx="6"></rect>
+          <text class="t strong mid" x="100" y="246">{c.you}</text>
+          <text class="t small mid" x="100" y="263">ssh + git clone</text>
+          <line class="danger" x1="160" y1="250" x2="250" y2="250"></line>
+        </g>
+        <g data-in="0" data-out="1">
+          <rect class="node" x="250" y="190" width="180" height="120" rx="8"></rect>
+          <rect x="250" y="190" width="180" height="120" rx="8" fill="url(#hatch)"></rect>
+          <text class="t strong mid" x="340" y="218">ec2 · t3.medium</text>
+          <text class="t mid" x="340" y="240">api express</text>
+          <text class="t mid" x="340" y="257">{c.postgres}</text>
+          <rect class="badge" x="262" y="274" width="156" height="22" rx="4"></rect>
+          <text class="t small mid badge-text" x="340" y="289">{c.sg}</text>
+          <text class="t small mid" x="340" y="334">{c.publicAll}</text>
+        </g>
+
+        <!-- v1: network -->
+        <g data-in="1">
+          <rect class="vpc" x="32" y="92" width="496" height="384" rx="10"></rect>
+          <text class="t strong" x="46" y="110">vpc</text>
+          <rect class="az" x="44" y="120" width="232" height="346" rx="8"></rect>
+          <rect class="az" x="284" y="120" width="232" height="346" rx="8"></rect>
+          <text class="t small" x="266" y="133" text-anchor="end">az-a</text>
+          <text class="t small" x="506" y="133" text-anchor="end">az-b</text>
+          {
+            [
+              { x: 52, labelX: 60, anchor: 'start' },
+              { x: 292, labelX: 500, anchor: 'end' },
+            ].map(({ x, labelX, anchor }) => (
+              <>
+                <rect class="subnet public" x={x} y="140" width="216" height="58" rx="5" />
+                <text class="t small" x={x + 8} y="153">public</text>
+                <rect class="subnet" x={x} y="208" width="216" height="112" rx="5" />
+                <text class="t small" x={labelX} y="221" text-anchor={anchor}>{c.privateApp}</text>
+                <rect class="subnet" x={x} y="330" width="216" height="126" rx="5" />
+                <text class="t small" x={labelX} y="343" text-anchor={anchor}>{c.privateData}</text>
+              </>
+            ))
+          }
+        </g>
+
+        <!-- v2: entry point -->
+        <path data-in="2" class="edge" pathLength="1" d="M340 42 L340 160"></path>
+        <g data-in="2">
+          <rect class="node" x="110" y="160" width="330" height="28" rx="6"></rect>
+          <text class="t strong mid" x="275" y="178">application load balancer</text>
+          <rect class="node" x="450" y="160" width="50" height="28" rx="6"></rect>
+          <text class="t strong mid" x="475" y="178">nat</text>
+        </g>
+
+        <!-- v3: compute -->
+        {
+          tasks.map((task) => (
+            <path
+              data-in="3"
+              class="edge"
+              pathLength="1"
+              d={`M275 188 C275 214 ${task.x + 43} 214 ${task.x + 43} 240`}
+            />
+          ))
+        }
+        <g data-in="3">
+          {
+            tasks.map((task) => (
+              <>
+                <rect class="node" x={task.x} y="240" width="86" height="48" rx="6" />
+                <text class="t strong mid" x={task.x + 43} y="261">
+                  {task.label}
+                </text>
+                <text class="t small mid" x={task.x + 43} y="277">
+                  fargate
+                </text>
+              </>
+            ))
+          }
+        </g>
+        <g data-in="3">
+          <text class="t small mid" x="598" y="214">git push ↓</text>
+          <rect class="node" x="548" y="224" width="100" height="44" rx="6"></rect>
+          <text class="t strong mid" x="598" y="243">ecr</text>
+          <text class="t small mid" x="598" y="259">images</text>
+          <path class="dashed" d="M548 246 C520 246 515 264 488 264"></path>
+        </g>
+
+        <!-- v4: data -->
+        <path data-in="4" class="edge" pathLength="1" d="M109 288 C109 330 150 330 150 370"></path>
+        <path data-in="4" class="edge" pathLength="1" d="M205 288 C205 330 165 330 165 370"></path>
+        <path data-in="4" class="edge" pathLength="1" d="M349 288 C349 336 185 330 185 370"></path>
+        <path data-in="4" class="edge" pathLength="1" d="M445 288 C445 344 205 332 205 370"></path>
+        <g data-in="4">
+          <rect class="node" x="74" y="370" width="170" height="54" rx="6"></rect>
+          <text class="t strong mid" x="159" y="393">rds primary</text>
+          <text class="t small mid" x="159" y="410">postgresql</text>
+          <rect class="node" x="314" y="370" width="170" height="54" rx="6"></rect>
+          <text class="t strong mid" x="399" y="393">rds standby</text>
+          <text class="t small mid" x="399" y="410">postgresql</text>
+          <path class="dashed" d="M244 397 L314 397"></path>
+          <text class="t small mid" x="279" y="390">sync</text>
+          <text class="t small mid" x="159" y="444">{c.backups}</text>
+        </g>
+
+        <!-- v5: everything as code -->
+        <g data-in="5">
+          <rect class="tf" x="548" y="290" width="100" height="176" rx="6"></rect>
+          <text class="t strong mid tf-text" x="598" y="310">terraform</text>
+          <text class="t small" x="560" y="334">modules/</text>
+          <text class="t small" x="568" y="350">network</text>
+          <text class="t small" x="568" y="366">ecs</text>
+          <text class="t small" x="568" y="382">rds</text>
+          <text class="t small" x="560" y="406">envs/</text>
+          <text class="t small" x="568" y="422">dev ✓</text>
+          <text class="t small" x="568" y="438">staging ✓</text>
+          <text class="t small" x="568" y="454">prod ✓</text>
+        </g>
+      </svg>
+
+      <dl class="mt-3 hidden grid-cols-5 gap-3 border-t border-line pt-3 sm:grid">
+        {
+          hudLabels.map(([key, label]) => (
+            <div class="min-w-0">
+              <dt class="label text-faint">{label}</dt>
+              <dd data-hud-key={key} class="mt-0.5 font-mono text-xs leading-snug text-pretty text-fg transition-colors" />
+            </div>
+          ))
+        }
+      </dl>
+    </figure>
+  </div>
+
+  <div class="lg:w-[42%]">
+    {
+      steps.map((step, i) => (
+        <section data-step={i} class="flex min-h-[55vh] flex-col justify-center py-8 lg:min-h-[78vh]">
+          <p class="label">{step.version}</p>
+          <h3 class="mt-2 text-2xl font-semibold tracking-tight">{step.title}</h3>
+          <p class="mt-3 text-[17px] leading-relaxed text-muted">{step.body}</p>
+        </section>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .scrolly {
+    /* Break out of the reading column to use the full content width */
+    --w: min(69rem, calc(100vw - 2rem));
+    width: var(--w);
+    margin-left: calc(50% - var(--w) / 2);
+  }
+
+  .frame {
+    fill: none;
+    stroke: var(--faint);
+    stroke-dasharray: 4 4;
+  }
+  .vpc {
+    fill: none;
+    stroke: var(--fg);
+    stroke-opacity: 0.45;
+  }
+  .az {
+    fill: none;
+    stroke: var(--faint);
+    stroke-dasharray: 2 3;
+  }
+  .subnet {
+    fill: color-mix(in oklab, var(--fg) 3%, transparent);
+    stroke: var(--line);
+  }
+  .subnet.public {
+    fill: none;
+  }
+  .node {
+    fill: var(--surface);
+    stroke: var(--fg);
+    stroke-width: 1.25;
+    transition: stroke 0.6s ease;
+  }
+  .scrolly[data-current='5'] .node {
+    stroke: var(--accent);
+  }
+  .badge {
+    fill: var(--fg);
+  }
+  .t {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--muted);
+  }
+  .t.strong {
+    fill: var(--fg);
+    font-weight: 500;
+  }
+  .t.small {
+    font-size: 9.5px;
+  }
+  .t.mid {
+    text-anchor: middle;
+  }
+  .t.badge-text {
+    fill: var(--bg);
+  }
+  .danger,
+  .dashed {
+    fill: none;
+    stroke: var(--fg);
+    stroke-width: 1.25;
+    stroke-dasharray: 3 4;
+  }
+  .tf {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.25;
+  }
+  .t.tf-text {
+    fill: var(--accent);
+  }
+
+  /* Step-driven layers */
+  [data-in] {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  g[data-in] {
+    transform: translateY(8px);
+    transition:
+      opacity 0.5s ease,
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  [data-in][data-on] {
+    opacity: 1;
+    transform: none;
+  }
+  .edge {
+    fill: none;
+    stroke: var(--fg);
+    stroke-width: 1.25;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition:
+      opacity 0.3s ease,
+      stroke-dashoffset 0.9s ease 0.15s;
+  }
+  .edge[data-on] {
+    stroke-dashoffset: 0;
+  }
+
+  [data-step] {
+    opacity: 0.3;
+    transition: opacity 0.4s ease;
+  }
+  [data-step][data-active] {
+    opacity: 1;
+  }
+  [data-hud-key][data-changed] {
+    color: var(--accent);
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const root = document.querySelector<HTMLElement>('[data-scrolly]');
+  if (root) {
+    const steps = [...root.querySelectorAll<HTMLElement>('[data-step]')];
+    const layers = [...root.querySelectorAll<SVGElement>('[data-in]')];
+    const cells = [...root.querySelectorAll<HTMLElement>('[data-hud-key]')];
+    const hud: Record<string, string>[] = JSON.parse(root.dataset.hud ?? '[]');
+    let current = -1;
+
+    const setStep = (step: number) => {
+      if (step === current) return;
+      current = step;
+      root.dataset.current = String(step);
+      layers.forEach((layer) => {
+        const from = Number(layer.dataset.in);
+        const to = layer.dataset.out ? Number(layer.dataset.out) : Infinity;
+        layer.toggleAttribute('data-on', step >= from && step < to);
+      });
+      steps.forEach((el, i) => el.toggleAttribute('data-active', i === step));
+      const values: Record<string, string> = Object.assign({}, ...hud.slice(0, step + 1));
+      cells.forEach((cell) => {
+        const key = cell.dataset.hudKey ?? '';
+        cell.textContent = values[key] ?? '—';
+        cell.toggleAttribute('data-changed', step > 0 && key in (hud[step] ?? {}));
+      });
+    };
+
+    steps.forEach((el, i) =>
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 60%',
+        end: 'bottom 60%',
+        onToggle: (self) => self.isActive && setStep(i),
+      }),
+    );
+    setStep(0);
+  }
+</script>

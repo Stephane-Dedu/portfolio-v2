@@ -1,0 +1,31 @@
+---
+title: "Terraform Associate: Useless?"
+excerpt: "Does the Terraform Associate certification really teach you to architect in code, or is it just cramming?"
+date: 2026-01-20
+tags: [Terraform, IaC, Certification]
+---
+## The Certification Goal
+
+To deploy my application on AWS, I adopted an IaC (Infrastructure as Code) approach to version and code my infrastructure. Continuing my path toward DevOps and SRE, I thought taking the Terraform Associate certification would be an excellent step and a significant milestone to achieve.
+
+## Theory vs Practice: The Finding
+
+However, during my learning, a finding quickly emerged. After reading all the documentation and taking a first practice exam (with an honorable score of 65%), I realized in front of my IDE that I didn't know how to write a single line of Terraform [without AI ;)].
+
+I perfectly understood theoretical concepts like *remote state* or *locking*, but I was unable to design the code architecture, organize modules, or define outputs.
+
+## The Lesson to Remember
+
+I realized that the theory learned for the certification is useful, even essential: it teaches concepts that often remain hidden behind layers of abstraction if you just write code without understanding what happens behind the scenes.
+
+But the reverse reflection is equally true: if you only focus on theory, you risk blank page syndrome when moving to practice.
+
+In conclusion, this certification reminded me of an essential lesson: it's crucial to master your theoretical subject (documentation, concepts), but equally important to practice intensively (hands-on, labs). It's this combination that makes you truly effective, and I think this principle applies to many technologies and skills.
+
+## An Evolving Ecosystem
+
+The certification also allows you to update yourself on the latest best practices that you might miss by resting on your laurels. For example, using `import` blocks combined with the `-generate-config-out` plan option greatly simplifies importing existing resources, automatically generating HCL code and advantageously replacing tedious manual CLI commands.
+
+Moreover, it opens your eyes to **HCP Terraform** (formerly Terraform Cloud). You discover powerful tools like native integration with **Vault** for secrets, or using **Variable Sets** to standardize configurations at the organization scale. These are crucial "Enterprise" aspects that you don't necessarily learn by tinkering alone on personal projects.
+
+Thank you for reading! ;)

@@ -1,0 +1,46 @@
+---
+import { execSync } from 'node:child_process';
+import type { Lang } from '../i18n/ui';
+import { site } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+let commit = 'local';
+try {
+  commit = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+} catch {
+  // Not a git checkout yet: keep the placeholder
+}
+const deployedAt = new Intl.DateTimeFormat(lang === 'fr' ? 'fr-FR' : 'en-GB', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+}).format(new Date());
+---
+
+<footer class="mt-32 border-t border-line">
+  <div
+    class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between"
+  >
+    <p class="flex items-center gap-2.5 font-mono text-xs">
+      <span class="relative flex size-2" aria-hidden="true">
+        <span class="absolute inline-flex size-full animate-ping rounded-full bg-ok opacity-50 [animation-duration:2.4s]"
+        ></span>
+        <span class="relative inline-flex size-2 rounded-full bg-ok"></span>
+      </span>
+      build passing
+    </p>
+    <dl class="label flex flex-wrap gap-x-5 gap-y-1">
+      <div><dt class="inline">deploy </dt><dd class="inline text-fg">{deployedAt}</dd></div>
+      <div><dt class="inline">commit </dt><dd class="inline text-fg">{commit}</dd></div>
+      <div><dt class="inline">build </dt><dd class="inline text-fg">{Astro.generator.toLowerCase()}</dd></div>
+    </dl>
+    <div class="label flex gap-4">
+      <a href={site.github} class="hover:text-fg" target="_blank" rel="noopener">github</a>
+      <a href={site.linkedin} class="hover:text-fg" target="_blank" rel="noopener">linkedin</a>
+    </div>
+  </div>
+</footer>

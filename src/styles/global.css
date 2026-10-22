@@ -1,0 +1,237 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ---------- Tokens ---------- */
+:root {
+  --bg: #f5f5f2;
+  --surface: #fbfbf9;
+  --fg: #141414;
+  --muted: #66665f;
+  --faint: #a6a69f;
+  --line: #e0e0d9;
+  --accent: #2b50f0;
+  --ok: #17924d;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0c0c0d;
+  --surface: #131315;
+  --fg: #ececea;
+  --muted: #8e8e88;
+  --faint: #56564f;
+  --line: #242427;
+  --accent: #8197ff;
+  --ok: #3ccf7a;
+  color-scheme: dark;
+}
+
+/* No-JS fallback: the head script normally sets data-theme */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0c0c0d;
+    --surface: #131315;
+    --fg: #ececea;
+    --muted: #8e8e88;
+    --faint: #56564f;
+    --line: #242427;
+    --accent: #8197ff;
+    --ok: #3ccf7a;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  /* One terminal-flavoured family everywhere. To read long posts in a sans,
+     point --font-sans at e.g. "IBM Plex Sans" and keep --font-mono. */
+  --font-sans: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
+  --font-rounded: "M PLUS Rounded 1c", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---------- Base ---------- */
+html {
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--bg);
+  font-family: var(--font-sans);
+  font-variant-ligatures: none;
+}
+
+/* k9s skin: a dark terminal in both themes */
+.k9s {
+  --t-bg: #0b0e14;
+  --t-fg: #d7dce2;
+  --t-dim: #7a828e;
+  --t-aqua: #5fd7d7;
+  --t-blue: #5f9df7;
+  --t-orange: #f5a35c;
+  --t-yellow: #e5c07b;
+  --t-red: #f47174;
+  --t-magenta: #d7a6ff;
+}
+
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+/* Cross-document view transitions: no JS router needed */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+}
+
+/* ---------- Components (layered so utilities can override them) ---------- */
+@layer components {
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    color: var(--muted);
+  }
+
+  /* Spotlight: a soft halo that follows the pointer (see scripts/ui.ts) */
+  .spotlight {
+    position: relative;
+    isolation: isolate;
+  }
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 300ms;
+    background: radial-gradient(
+      420px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in oklab, var(--fg) 7%, transparent),
+      transparent 60%
+    );
+  }
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+}
+
+/* Hero clouds: faded behind the text column, full strength on the right, gone at the bottom */
+.clouds-mask {
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.06) 25%, transparent 55%);
+}
+@media (min-width: 640px) {
+  .clouds-mask {
+    mask-image:
+      linear-gradient(to bottom, #000 45%, transparent),
+      linear-gradient(to right, rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.15) 14%, rgb(0 0 0 / 0.15) 54%, #000 74%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+}
+
+@keyframes pod-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+/* ---------- Article typography ---------- */
+.article {
+  --tw-prose-body: color-mix(in oklab, var(--fg) 84%, var(--bg));
+  --tw-prose-headings: var(--fg);
+  --tw-prose-lead: var(--muted);
+  --tw-prose-links: var(--fg);
+  --tw-prose-bold: var(--fg);
+  --tw-prose-counters: var(--muted);
+  --tw-prose-bullets: var(--faint);
+  --tw-prose-hr: var(--line);
+  --tw-prose-quotes: var(--fg);
+  --tw-prose-quote-borders: var(--line);
+  --tw-prose-captions: var(--muted);
+  --tw-prose-code: var(--fg);
+  --tw-prose-th-borders: var(--line);
+  --tw-prose-td-borders: var(--line);
+  /* Monospace: 1ch is one glyph, so this is exactly 72 characters per line */
+  max-width: 72ch;
+}
+.article :where(h2, h3) {
+  scroll-margin-top: 6rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+/* Markdown-style prefixes, only on the article's own headings (not on embedded components) */
+.article > h2::before {
+  content: "## ";
+  color: var(--faint);
+  font-weight: 400;
+}
+.article > h3::before {
+  content: "### ";
+  color: var(--faint);
+  font-weight: 400;
+}
+.article :where(a) {
+  text-decoration-color: var(--faint);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms, color 150ms;
+}
+.article :where(a):hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+.article :where(:not(pre) > code) {
+  font-weight: 450;
+  font-size: 0.88em;
+  padding: 0.12em 0.36em;
+  border-radius: 0.3rem;
+  background: color-mix(in oklab, var(--fg) 6%, transparent);
+}
+.article :where(:not(pre) > code)::before,
+.article :where(:not(pre) > code)::after {
+  content: none;
+}
+.article :where(table) {
+  font-size: 0.95em;
+}
+.article :where(th) {
+  font-weight: 600;
+}
+
+/* ---------- Motion preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

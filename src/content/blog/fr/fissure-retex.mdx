@@ -1,0 +1,162 @@
+---
+title: "Fissure : d’un déploiement catastrophique à une infrastructure moderne"
+excerpt: "L’histoire complète de la conception et du déploiement de l’infrastructure de mon application Fissure, de la première idée à la production."
+date: 2026-01-30
+tags: [AWS, DevOps, Architecture, Terraform]
+---
+import Callout from '../../../components/Callout.astro';
+
+## Contexte et objectifs
+
+Fissure est une application mobile FullStack qui permet de tracker ses calories et ses entrainements, le tout avec une implémentation de Gemini pour rendre les données plus facile a traquer.
+
+Cela peut sembler très classique, mais pratiquant du sport personnelement et faisant attention a ma diète, j'ai fait un constat : il n'y a pas d'application correcte d'un point de vue design et prix qui permet de faire les deux a la fois, cela force souvent deux applications voire deux abonnements pour un seul objectif.
+
+## Choix technologiques
+
+Après avoir étudié les différentes options, j'ai opté pour une clean architecture en ExpressJS, facile et rapide à mettre en place avec une bonne scalabilité.
+
+Pour le front-end de l'app, pour pouvoir déployer sur iOS et Android avec le même code et une technologie dans laquelle j'étais déjà efficace, j'ai choisi React Native avec Expo.
+
+Pour la base de données, PostgreSQL s'est imposé comme le choix évident pour sa robustesse, sa conformité ACID et sa compatibilité avec les besoins relationnels de l'application.
+
+## Le premier déploiement : une leçon d'humilité
+
+Après avoir obtenu un MVP satisfaisant, j'ai cherché à déployer rapidement l'app pour des tests. Avec peu de bases en réseau et Cloud, autant dire que mon premier déploiement était catastrophique.
+
+<Callout type="warn" title="Ce que j’ai fait (ne pas reproduire)">
+- Instance EC2 publique exposée sur Internet
+- Security Group configuré avec des règles ingress ouvertes sur tous les ports (0.0.0.0/0)
+- Déploiement manuel via SSH et git clone
+- Base de données stockée sur le volume EBS de l'instance
+- Aucune séparation réseau, tout dans le subnet public
+</Callout>
+
+Cette approche était un cauchemar de sécurité et de maintenabilité. C'est cette expérience qui m'a fait réaliser la complexité de déployer une infrastructure résiliente, scalable et sécurisée.
+
+## L'apprentissage et la remise en question
+
+Voulant avoir la main sur l'infrastructure plutôt qu'une solution complètement serverless, j'ai commencé à investiguer sérieusement le sujet du Cloud et du DevOps (vous pouvez consulter [mon post sur la certification AWS SAA](/fr/blog/aws-saa) pour en savoir plus ;) ).
+
+Cette remise en question m'a poussé à étudier en profondeur les bonnes pratiques d'Architecture, la sécurité réseau, et les patterns de déploiement.
+
+## L'architecture finale
+
+Après avoir bien étudié le Cloud, j'ai opté pour une architecture moderne et sécurisée. Voici les composants principaux :
+
+- **Compute** : ECS Fargate pour la containerisation serverless. Déploiements automatiques via ECR sur push, scaling automatique.
+- **Database** : RDS PostgreSQL en Multi-AZ. Backups automatiques, ACID compliance, haute disponibilité.
+- **Sécurité réseau** : VPC avec subnets privés. ECS et RDS en subnets privés, ALB en public, NAT Gateway pour l'egress.
+- **Load balancing** : Application Load Balancer. Distribution du trafic, health checks, SSL termination.
+
+L'infrastructure est déployée sur **2 Availability Zones** pour garantir un failover automatique et une haute disponibilité. Un bucket S3 avec redimensionnement d'images via Lambda arrivera dans la prochaine version.
+
+Architecture en couches :
+
+1. **Couche de présentation** : ALB distribuant le trafic
+2. **Couche applicative** : ECS Fargate dans des subnets privés
+3. **Couche de données** : RDS PostgreSQL Multi-AZ
+4. **Couche de cache** : ElastiCache Redis (à venir)
+5. **Couche de monitoring** : CloudWatch pour logs et métriques
+
+La version animée de cette architecture est sur [la page du projet](/fr/projects/fissure).
+
+## Infrastructure as Code
+
+Pour gérer l'infrastructure de manière reproductible, j'ai utilisé Terraform (voir mon avis sur [la certification Terraform Associate](/fr/blog/terraform-associate)). Cela m'a permis de :
+
+- Versionner toute l'infrastructure
+- Faciliter les déploiements et rollbacks
+- Documenter l'architecture dans le code
+- Partager et collaborer facilement
+
+La structure des modules Terraform suit les bonnes pratiques avec une séparation claire entre les environnements (dev, staging, prod).
+
+<Callout title="Bloc de démo pour le prototype">
+Les deux blocs de code ci-dessous illustrent le rendu Expressive Code (titre de fichier, cadre terminal, lignes surlignées). Remplace-les par ta vraie arborescence et tes vraies commandes.
+</Callout>
+
+```txt title="infra/"
+infra/
+├── modules/
+│   ├── network/   # VPC, subnets, NAT
+│   ├── ecs/       # cluster, service Fargate, ALB
+│   └── rds/       # PostgreSQL Multi-AZ
+└── envs/
+    ├── dev/
+    ├── staging/
+    └── prod/
+```
+
+```bash title="Terminal" {2}
+cd infra/envs/prod
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+## Sécurité et conformité
+
+La sécurité était une priorité absolue. J'ai implémenté :
+
+- **IAM Roles** : principe du moindre privilège pour tous les services
+- **Secrets Manager** : gestion sécurisée des credentials
+- **WAF** : protection contre les attaques web courantes
+- **Encryption** : chiffrement au repos et en transit
+
+## Monitoring et observabilité
+
+Pour garantir la fiabilité du système, j'ai mis en place un monitoring complet :
+
+**CloudWatch** pour les métriques système et applicatives, **X-Ray** pour le tracing distribué, et **CloudWatch Logs** pour l'agrégation centralisée des logs.
+
+Des alertes ont été configurées pour les métriques critiques (CPU, mémoire, latence, erreurs) avec des seuils adaptés à chaque environnement.
+
+## Optimisation des coûts
+
+L'optimisation des coûts était cruciale pour un projet personnel. En comparant mon premier déploiement (EC2 toujours allumée) à l'architecture finale, j'ai réalisé d'énormes économies.
+
+|                | Avant (EC2)             | Après (Fargate)          |
+| -------------- | ----------------------- | ------------------------ |
+| Compute        | Instance t3.medium 24/7 | ECS Fargate avec scaling |
+| Coût           | ~30 $/mois fixe         | ~8-15 $/mois variable    |
+| Scaling        | Aucun                   | Scale-to-zero possible   |
+| Sans trafic    | On paie quand même      | Pay-per-use réel         |
+
+Stratégies d'optimisation mises en place :
+
+- **Auto-scaling intelligent** : ECS Fargate scale automatiquement selon la charge CPU/mémoire, permettant de réduire à zéro pendant les périodes creuses
+- **RDS Multi-AZ optimisé** : utilisation de db.t3.micro en dev, db.t3.small en prod avec snapshots automatiques pour réduire les coûts
+- **Lifecycle policies S3** : transition automatique vers Glacier pour les anciens assets, réduction de 70% sur le stockage
+- **Monitoring des coûts** : AWS Cost Explorer avec alertes budgétaires pour éviter les surprises
+
+Au total : **~60 % de réduction des coûts** par rapport à l'architecture EC2 initiale.
+
+## Leçons apprises
+
+Ce projet m'a appris énormément sur l'Architecture et le DevOps. Voici les leçons que j'ai tirées de cette aventure, du premier déploiement catastrophique à l'architecture finale.
+
+### Commencer simple, itérer ensuite
+
+Mon premier déploiement EC2 était une erreur, mais m'a permis de comprendre rapidement les enjeux. Plutôt que de sur-architecturer dès le départ, j'ai appris à itérer : MVP → apprentissage → amélioration. C'est cette approche qui m'a mené vers l'architecture finale.
+
+### La théorie sans pratique ne suffit pas
+
+Passer la certification AWS SAA m'a donné les bases théoriques, mais c'est en déployant réellement que j'ai compris les vrais défis. Comme avec Terraform, la théorie est essentielle mais la pratique révèle les détails cachés derrière les abstractions.
+
+### La sécurité dès le début, pas après
+
+Configurer un Security Group ouvert sur tous les ports était une erreur monumentale. J'ai appris que la sécurité doit être pensée dès la conception : subnets privés, IAM roles, encryption. C'est beaucoup plus difficile à ajouter après coup.
+
+### L'automatisation est non-négociable
+
+Déployer manuellement via SSH était un cauchemar. Terraform et les déploiements automatiques via ECR ont transformé mon workflow. L'automatisation réduit les erreurs humaines et rend les rollbacks possibles en quelques minutes.
+
+### Les coûts cloud peuvent exploser rapidement
+
+Une instance EC2 toujours allumée coûte cher même sans trafic. J'ai appris à monitorer les coûts dès le début avec Cost Explorer et à utiliser le scaling pour payer seulement ce que j'utilise réellement.
+
+### Documenter au fur et à mesure
+
+Terraform comme documentation vivante, commentaires dans le code, et ce blog post. La documentation m'aide à comprendre mes propres décisions passées et à partager mes apprentissages.
+
+Cette infrastructure évolue continuellement avec les besoins de l'application et les nouvelles connaissances acquises. Chaque erreur est une opportunité d'apprendre, et chaque amélioration rend le système plus robuste.

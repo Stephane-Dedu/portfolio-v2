@@ -1,0 +1,117 @@
+---
+import '@fontsource-variable/jetbrains-mono';
+// Rounded face from the first sdedu.cloud, used for experience and certifications.
+// Latin subset only: the full package also ships Japanese glyphs.
+import '@fontsource/m-plus-rounded-1c/latin-400.css';
+import '@fontsource/m-plus-rounded-1c/latin-500.css';
+import '@fontsource/m-plus-rounded-1c/latin-700.css';
+import 'lenis/dist/lenis.css';
+import '../styles/global.css';
+import { getCollection } from 'astro:content';
+import Header from '../components/Header.astro';
+import StatusBar from '../components/StatusBar.astro';
+import CommandPalette from '../components/CommandPalette';
+import { entrySlug, inLang, localize, otherLang, unlocalize, useTranslations, type Lang } from '../i18n/ui';
+import { site } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+}
+
+const { lang, title } = Astro.props;
+const t = useTranslations(lang);
+const description = Astro.props.description ?? t('meta.description');
+const fullTitle = title ? `${title} · ${site.domain}` : `${site.name} · ${site.role}`;
+
+// Every page exists in both languages under the same path
+const basePath = unlocalize(Astro.url.pathname);
+const alternates = { en: localize('en', basePath), fr: localize('fr', basePath) };
+
+const projects = inLang(await getCollection('projects'), lang).sort((a, b) => a.data.order - b.data.order);
+const posts = inLang(await getCollection('blog'), lang).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const paletteItems = [
+  { group: t('palette.pages'), label: t('palette.home'), href: localize(lang, '/') },
+  { group: t('palette.pages'), label: t('home.projects'), href: localize(lang, '/projects') },
+  { group: t('palette.pages'), label: 'Blog', href: localize(lang, '/blog') },
+  ...projects.map((p) => ({
+    group: t('palette.projects'),
+    label: p.data.title,
+    hint: p.data.tags.slice(0, 3).join(' · '),
+    href: localize(lang, `/projects/${entrySlug(p.id)}`),
+  })),
+  ...posts.map((p) => ({
+    group: t('palette.posts'),
+    label: p.data.title,
+    hint: p.data.tags[0],
+    href: localize(lang, `/blog/${entrySlug(p.id)}`),
+  })),
+  { group: t('palette.links'), label: t('palette.cv'), hint: 'pdf', href: site.cv },
+  { group: t('palette.links'), label: 'GitHub', hint: 'Stephane-Dedu', href: site.github },
+  { group: t('palette.links'), label: 'LinkedIn', href: site.linkedin },
+  { group: t('palette.actions'), label: t('palette.lang'), hint: otherLang(lang), href: alternates[otherLang(lang)] },
+  { group: t('palette.actions'), label: t('palette.theme'), action: 'theme' as const },
+];
+const paletteStrings = {
+  label: t('palette.label'),
+  placeholder: t('palette.placeholder'),
+  empty: t('palette.empty'),
+  footer: t('palette.footer'),
+};
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" hreflang="en" href={new URL(alternates.en, Astro.site)} />
+    <link rel="alternate" hreflang="fr" href={new URL(alternates.fr, Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, Astro.site)} />
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const mq = matchMedia('(prefers-color-scheme: dark)');
+        const stored = () => {
+          try {
+            return localStorage.getItem('theme');
+          } catch {
+            return null;
+          }
+        };
+        const apply = () => {
+          root.dataset.theme = stored() ?? (mq.matches ? 'dark' : 'light');
+        };
+        apply();
+        mq.addEventListener('change', apply);
+        window.__setTheme = (theme) => {
+          try {
+            localStorage.setItem('theme', theme);
+          } catch {}
+          apply();
+        };
+      })();
+    </script>
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-fg focus:px-3 focus:py-2 focus:text-bg"
+      >{t('skip')}</a
+    >
+    <Header lang={lang} alternate={alternates[otherLang(lang)]} />
+    <main id="main" class="flex-1 overflow-x-clip">
+      <slot />
+    </main>
+    <StatusBar lang={lang} />
+    <CommandPalette client:idle items={paletteItems} strings={paletteStrings} />
+    <script>
+      import '../scripts/ui';
+    </script>
+  </body>
+</html>
