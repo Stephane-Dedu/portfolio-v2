@@ -9,6 +9,10 @@ facts:
   - VM existante adoptée dans Terraform via des blocs import
   - ~120 Mo de WebAssembly servis en ~8 Mo (Brotli)
   - ~11 $/mois quand elle tourne
+story:
+  problem: "Netplay en lockstep : chaque frame attend l’input de l’autre joueur, donc le round-trip est tout ce que les joueurs ressentent."
+  decision: "Une petite e2-micro à Paris (europe-west9) plutôt que l’offre gratuite, qui n’existe que dans quelques régions US."
+  result: "Environ 100 ms gagnées par aller-retour depuis l’Europe, pour ~11 $/mois. La VM existante a été adoptée dans Terraform avec des blocs import."
 tags: [GCP, Terraform, Compute Engine, Caddy, WebSocket, Route 53]
 links:
   - { label: repo infra, href: 'https://github.com/Stephane-Dedu/tenkaichi-3-in-web-browser-infra' }

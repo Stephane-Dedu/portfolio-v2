@@ -11,6 +11,10 @@ export const site = {
     en: 'I got into infrastructure from the application side. After a year shipping Python microservices to Kubernetes, I now work on reliability, platform tooling and Kubernetes security.',
     fr: 'Je suis arrivé à l’infra par le côté applicatif : après un an à livrer des microservices Python sur Kubernetes, je travaille maintenant sur la fiabilité, l’outillage plateforme et la sécurité Kubernetes.',
   } as Localized,
+  pitchEmphasis: {
+    en: 'reliability, platform tooling and Kubernetes security',
+    fr: 'la fiabilité, l’outillage plateforme et la sécurité Kubernetes',
+  } as Localized,
   github: 'https://github.com/Stephane-Dedu',
   linkedin: 'https://www.linkedin.com/in/st%C3%A9phane-dedu-14579a266/',
   cv: '/CV_DEDU_STEPHANE_DEVOPS_ALTERNANCE.pdf',
@@ -75,9 +79,3 @@ export const site = {
   ] as { code: string; name: string; issuer: string; issued: Localized; icon: CertIconName; verify: string }[],
 };
 
-/** In a two-column grid, the last non-featured card spans both columns when it would sit alone. */
-export const isWide = (projects: { data: { featured: boolean } }[], index: number) => {
-  if (projects[index].data.featured) return true;
-  const regular = projects.filter((p) => !p.data.featured);
-  return regular.length % 2 === 1 && regular.at(-1) === projects[index];
-};

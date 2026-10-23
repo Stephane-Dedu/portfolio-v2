@@ -18,6 +18,8 @@ const projects = defineCollection({
     tags: z.array(z.string()),
     links: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
     post: z.string().optional(),
+    // Three-line case study shown in the project list
+    story: z.object({ problem: z.string(), decision: z.string(), result: z.string() }),
   }),
 });
 

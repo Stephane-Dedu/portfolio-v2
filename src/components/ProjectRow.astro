@@ -1,0 +1,66 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ProjectDiagram from './ProjectDiagram.astro';
+import { entrySlug, localize, useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  lang: Lang;
+}
+const { project, lang } = Astro.props;
+const t = useTranslations(lang);
+const slug = entrySlug(project.id);
+const href = localize(lang, `/projects/${slug}`);
+const { title, summary, tags, status, scope, year, story } = project.data;
+const steps = [
+  [t('story.problem'), story.problem],
+  [t('story.decision'), story.decision],
+  [t('story.result'), story.result],
+];
+---
+
+<article
+  data-tags={tags.join('|')}
+  data-reveal
+  class="grid gap-10 border-t border-line py-12 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16"
+>
+  <div>
+    <p class="label">
+      {year} · {t(`scope.${scope}` as const)}
+      {status === 'wip' && <span> · {t('card.wip')}</span>}
+    </p>
+    <h3 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl" style={`view-transition-name: project-${slug}`}>
+      <a href={href} class="transition-colors hover:text-accent">{title}</a>
+    </h3>
+    <p class="mt-4 max-w-[54ch] text-lg leading-relaxed text-muted sm:text-xl">{summary}</p>
+
+    <dl class="mt-8 space-y-5">
+      {
+        steps.map(([label, text]) => (
+          <div class="grid gap-1 sm:grid-cols-[96px_1fr] sm:gap-6">
+            <dt class="label pt-1.5">{label}</dt>
+            <dd class="max-w-[62ch] text-[17px] leading-relaxed">{text}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <div class="mt-8 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
+      <p class="font-mono text-[13px] leading-relaxed text-muted">{tags.join(' · ')}</p>
+      <a
+        href={href}
+        class="group inline-flex shrink-0 items-center gap-1.5 font-mono text-sm underline decoration-faint underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+      >
+        {t('row.read')}
+        <span class="transition-transform group-hover:translate-x-0.5" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+
+  <figure class="self-start lg:pt-9">
+    <a href={href} tabindex="-1" aria-hidden="true" class="block opacity-90 transition-opacity hover:opacity-100">
+      <ProjectDiagram slug={slug} />
+    </a>
+    <figcaption class="label mt-3 border-t border-line pt-2">{t('row.fig')} · {title}</figcaption>
+  </figure>
+</article>

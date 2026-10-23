@@ -10,6 +10,10 @@ facts:
   - EC2 publique → ECS Fargate derrière un ALB
   - RDS PostgreSQL Multi-AZ sur 2 AZ, en subnets privés
   - Compute de ~30 $/mois fixe à ~8-15 $/mois
+story:
+  problem: "Mon premier déploiement : une EC2 publique, un Security Group ouvert sur tous les ports, des mises à jour via SSH et git clone."
+  decision: "ECS Fargate derrière un ALB, RDS PostgreSQL Multi-AZ en subnets privés sur 2 AZ, le tout en Terraform."
+  result: "Compute de ~30 $/mois fixe à ~8‑15 $/mois, et des rollbacks en quelques minutes au lieu d’une session SSH."
 tags: [AWS, ECS Fargate, RDS Multi-AZ, ALB, ECR, VPC, Terraform]
 links:
   - { label: landing de l’app, href: 'https://landing-page-fissure-4adi.vercel.app/' }

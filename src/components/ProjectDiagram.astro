@@ -1,0 +1,165 @@
+---
+// Small architecture sketch for a project card. Labels stay in English on purpose:
+// they are resource names, the same in both languages.
+interface Props {
+  slug: string;
+}
+const { slug } = Astro.props;
+const marker = `arrow-${slug}`;
+---
+
+<svg viewBox="0 0 360 140" class="diagram block h-auto w-full" role="img" aria-label={`Architecture: ${slug}`}>
+  <defs>
+    <marker id={marker} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L8 4 L0 8 z" class="head"></path>
+    </marker>
+  </defs>
+
+  {
+    slug === 'fissure' && (
+      <>
+        <rect class="node" x="10" y="57" width="62" height="26" rx="13" />
+        <text class="t" x="41" y="74">internet</text>
+        <path class="edge" d="M72 70 H98" marker-end={`url(#${marker})`} />
+        <rect class="node key" x="100" y="57" width="48" height="26" rx="5" />
+        <text class="t strong" x="124" y="74">alb</text>
+        <path class="edge" d="M148 64 C162 64 162 38 176 38" marker-end={`url(#${marker})`} />
+        <path class="edge" d="M148 76 C162 76 162 102 176 102" marker-end={`url(#${marker})`} />
+        <rect class="node" x="178" y="26" width="72" height="24" rx="5" />
+        <text class="t" x="214" y="42">fargate</text>
+        <rect class="node" x="178" y="90" width="72" height="24" rx="5" />
+        <text class="t" x="214" y="106">fargate</text>
+        <path class="edge" d="M250 38 H274" marker-end={`url(#${marker})`} />
+        <path class="edge" d="M250 102 C262 102 262 42 274 42" marker-end={`url(#${marker})`} />
+        <rect class="node key" x="276" y="26" width="74" height="24" rx="5" />
+        <text class="t strong" x="313" y="42">rds primary</text>
+        <rect class="node" x="276" y="90" width="74" height="24" rx="5" />
+        <text class="t" x="313" y="106">standby</text>
+        <path class="dashed" d="M313 50 V90" />
+        <text class="t small start" x="180" y="134">2 AZ · private subnets · terraform</text>
+      </>
+    )
+  }
+
+  {
+    slug === 'vllm-eks' && (
+      <>
+        <rect class="node" x="8" y="57" width="48" height="26" rx="13" />
+        <text class="t" x="32" y="74">user</text>
+        <path class="edge" d="M56 70 H80" marker-end={`url(#${marker})`} />
+        <rect class="node" x="82" y="57" width="44" height="26" rx="5" />
+        <text class="t strong" x="104" y="74">alb</text>
+        <path class="edge" d="M126 70 H150" marker-end={`url(#${marker})`} />
+        <rect class="frame" x="152" y="14" width="200" height="112" rx="8" />
+        <text class="t small start" x="162" y="28">eks 1.34 · us-east-1a</text>
+        <rect class="node" x="162" y="38" width="86" height="76" rx="5" />
+        <text class="t strong" x="205" y="56">cpu · spot</text>
+        <text class="t small" x="205" y="76">argocd</text>
+        <text class="t small" x="205" y="90">keda</text>
+        <text class="t small" x="205" y="104">prometheus</text>
+        <rect class="node key pending" x="256" y="38" width="86" height="76" rx="5" />
+        <text class="t strong" x="299" y="56">gpu · spot</text>
+        <text class="t small" x="299" y="80">vllm</text>
+        <text class="t small" x="299" y="96">qwen3-4b</text>
+        <text class="t small muted" x="299" y="134">planned</text>
+      </>
+    )
+  }
+
+  {
+    slug === 'tenkaichi' && (
+      <>
+        <rect class="node" x="4" y="22" width="92" height="28" rx="5" />
+        <text class="t" x="50" y="40">player · wasm</text>
+        <rect class="node" x="4" y="90" width="92" height="28" rx="5" />
+        <text class="t" x="50" y="108">player · wasm</text>
+        <path class="edge" d="M96 36 C122 36 122 62 146 62" marker-start={`url(#${marker})`} marker-end={`url(#${marker})`} />
+        <path class="edge" d="M96 104 C122 104 122 78 146 78" marker-start={`url(#${marker})`} marker-end={`url(#${marker})`} />
+        <rect class="node key" x="148" y="48" width="92" height="44" rx="5" />
+        <text class="t strong" x="194" y="66">e2-micro</text>
+        <text class="t small" x="194" y="82">caddy · relay</text>
+        <path class="dashed" d="M240 62 C254 62 254 36 266 36" />
+        <rect class="node" x="266" y="22" width="90" height="28" rx="5" />
+        <text class="t" x="311" y="40">gcs · save</text>
+        <rect class="node" x="266" y="90" width="90" height="28" rx="5" />
+        <text class="t" x="311" y="108">route 53</text>
+        <path class="dashed" d="M240 78 C254 78 254 104 266 104" />
+        <text class="t small start" x="148" y="134">gcp europe-west9 · ~$11/month</text>
+      </>
+    )
+  }
+
+  {
+    slug === 'portfolio' && (
+      <>
+        <rect class="node" x="8" y="57" width="58" height="26" rx="5" />
+        <text class="t" x="37" y="74">git push</text>
+        <path class="edge" d="M66 70 H86" marker-end={`url(#${marker})`} />
+        <rect class="node" x="88" y="57" width="70" height="26" rx="5" />
+        <text class="t strong" x="123" y="74">actions</text>
+        <path class="edge" d="M158 70 H186" marker-end={`url(#${marker})`} />
+        <text class="t small" x="172" y="58">oidc</text>
+        <rect class="node key" x="188" y="57" width="44" height="26" rx="5" />
+        <text class="t strong" x="210" y="74">s3</text>
+        <path class="edge" d="M232 70 H252" marker-end={`url(#${marker})`} />
+        <rect class="node" x="254" y="57" width="96" height="26" rx="5" />
+        <text class="t" x="302" y="74">cloudfront</text>
+        <text class="t small start" x="8" y="122">no stored keys · immutable assets · html revalidated</text>
+      </>
+    )
+  }
+</svg>
+
+<style>
+  .diagram .node {
+    fill: var(--surface);
+    stroke: var(--fg);
+    stroke-opacity: 0.55;
+    stroke-width: 1.1;
+  }
+  .diagram .node.key {
+    stroke: var(--accent);
+    stroke-opacity: 1;
+  }
+  .diagram .node.pending {
+    stroke-dasharray: 4 3;
+  }
+  .diagram .frame {
+    fill: none;
+    stroke: var(--faint);
+    stroke-dasharray: 3 3;
+  }
+  .diagram .edge,
+  .diagram .dashed {
+    fill: none;
+    stroke: var(--fg);
+    stroke-opacity: 0.6;
+    stroke-width: 1.1;
+  }
+  .diagram .dashed {
+    stroke-dasharray: 3 3;
+  }
+  .diagram .head {
+    fill: var(--fg);
+    fill-opacity: 0.6;
+  }
+  .diagram .t {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--fg);
+    text-anchor: middle;
+  }
+  .diagram .t.start {
+    text-anchor: start;
+  }
+  .diagram .t.strong {
+    font-weight: 600;
+  }
+  .diagram .t.small {
+    font-size: 8.5px;
+    fill: var(--muted);
+  }
+  .diagram .t.muted {
+    fill: var(--faint);
+  }
+</style>

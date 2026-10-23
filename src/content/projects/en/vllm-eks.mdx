@@ -9,6 +9,10 @@ facts:
   - 9 ADRs documenting every choice and what it costs
   - EKS 1.34 in Terraform, platform in GitOps (ArgoCD App-of-Apps)
   - ~$10/month with tear-down, versus ~$700 on-demand 24/7
+story:
+  problem: "Serve an LLM on a GPU Kubernetes cluster, cleanly and reliably, on a $15-20/month budget."
+  decision: "Managed EKS on spot instances, torn down between sessions, platform in GitOps, and every choice written down as an ADR."
+  result: "~$10/month instead of ~$700 on-demand. 4 of 11 steps done; the GPU node group comes next."
 tags: [AWS EKS, Terraform, ArgoCD, KEDA, Prometheus, vLLM, GPU spot]
 links:
   - { label: repo, href: 'https://github.com/Stephane-Dedu/vLLM-inference-EKS' }

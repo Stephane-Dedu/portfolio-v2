@@ -183,7 +183,7 @@ body {
   .clouds-mask {
     mask-image:
       linear-gradient(to bottom, #000 45%, transparent),
-      linear-gradient(to right, rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.15) 14%, rgb(0 0 0 / 0.15) 54%, #000 74%);
+      linear-gradient(to right, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.12) 14%, rgb(0 0 0 / 0.15) 54%, #000 74%);
     -webkit-mask-composite: source-in;
     mask-composite: intersect;
   }
