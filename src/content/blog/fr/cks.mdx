@@ -1,0 +1,34 @@
+---
+title: "CKS : la sécurité Kubernetes commence sous Kubernetes"
+excerpt: "Seccomp, AppArmor, Falco, OPA : ce que la CKS m’a appris sur la sécurité d’un cluster, et pourquoi elle ne se remet pas à plus tard."
+date: 2026-07-01
+tags: [Kubernetes, Security, Certification]
+---
+## Pourquoi la CKS
+
+La CKA m'avait appris à faire tourner et réparer un cluster. La **CKS (Certified Kubernetes Security Specialist)** pose une autre question : ce cluster est-il sûr ? Elle est considérée comme l'une des certifications les plus exigeantes de l'écosystème Kubernetes, et il faut avoir la CKA pour la passer.
+
+## Plus bas que Kubernetes
+
+La préparation apporte une vraie vision de la sécurité dans un cluster. Et on se rend vite compte qu'elle se rapproche des couches basses : le noyau Linux et le réseau.
+
+L'examen insiste sur les thématiques suivantes :
+
+- Restriction des syscalls avec **Seccomp** et confinement des workloads avec **AppArmor**
+- **NetworkPolicies** via différents controllers, et mTLS avec **Istio**
+- Supply chain : **ImagePolicyWebhook**, scan d'images avec **Trivy**
+- Hardening du control plane : API server, etcd, kubelet
+- Détection runtime avec **Falco** et audit logging
+- Admission control et policies avec **OPA/Gatekeeper**
+
+## Le même format que la CKA, en plus dense
+
+Comme pour la CKA, tout se passe dans un terminal. La différence, c'est le nombre d'outils à connaître : une seule question peut vous faire passer d'un profil AppArmor à une règle Falco puis à un manifest de l'API server. Là encore, Killer.sh a été indispensable.
+
+## Ce que j'en retiens
+
+Cette certification a pour moi une réelle valeur ajoutée : on apprend à implémenter la sécurité au fur et à mesure, plutôt que de la déléguer à un futur incertain.
+
+C'est la même leçon que mon premier déploiement de Fissure, avec un Security Group ouvert à toute la planète : la sécurité ajoutée après coup coûte toujours plus cher. Obtenue en juillet 2026, juste avant de commencer mon alternance SRE chez Welcome to the Jungle.
+
+Merci pour votre lecture ! ;)

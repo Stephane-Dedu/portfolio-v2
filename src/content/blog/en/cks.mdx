@@ -1,0 +1,34 @@
+---
+title: "CKS: Kubernetes security starts below Kubernetes"
+excerpt: "Seccomp, AppArmor, Falco, OPA: what the CKS taught me about cluster security, and why it can’t be postponed."
+date: 2026-07-01
+tags: [Kubernetes, Security, Certification]
+---
+## Why the CKS
+
+The CKA taught me how to run and fix a cluster. The **CKS (Certified Kubernetes Security Specialist)** asks a different question: is that cluster secure? It's considered one of the most demanding certifications in the Kubernetes ecosystem, and you need the CKA to take it.
+
+## Below Kubernetes
+
+Preparing for it gives you a real understanding of security inside a cluster. And you quickly notice it moves closer to the lower layers: the Linux kernel and the network.
+
+The exam focuses on:
+
+- Restricting syscalls with **Seccomp** and confining workloads with **AppArmor**
+- **NetworkPolicies** across different controllers, and mTLS with **Istio**
+- Supply chain: **ImagePolicyWebhook**, image scanning with **Trivy**
+- Control plane hardening: API server, etcd, kubelet
+- Runtime detection with **Falco** and audit logging
+- Admission control and policies with **OPA/Gatekeeper**
+
+## Same format as the CKA, denser
+
+Like the CKA, everything happens in a terminal. The difference is the number of tools you need to know: a single question can take you from an AppArmor profile to a Falco rule to an API server manifest. Again, Killer.sh was essential.
+
+## What I take away
+
+For me this certification adds real value: you learn to build security in as you go, instead of pushing it to an uncertain future.
+
+It's the same lesson as my first Fissure deployment, with a Security Group open to the whole planet: security added after the fact always costs more. Certified in July 2026, right before starting my SRE apprenticeship at Welcome to the Jungle.
+
+Thanks for reading! ;)
