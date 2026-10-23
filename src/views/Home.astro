@@ -28,16 +28,13 @@ const button =
 <Base lang={lang}>
   <section class="relative isolate">
     <CloudsBackground client:only="react" />
-    <div
-      class="mx-auto grid max-w-6xl gap-12 px-4 pt-12 pb-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-14 lg:pt-8 lg:pb-20"
-    >
-      <div class="lg:pt-10">
+    <div class="mx-auto max-w-6xl px-4 pt-14 pb-14 sm:px-6 sm:pt-24 sm:pb-20">
       <p class="label"><span class="text-accent">~</span> $ whoami</p>
-      <h1 class="mt-4 text-5xl leading-[0.95] font-bold tracking-tight sm:text-7xl">
+      <h1 class="mt-4 text-5xl leading-[0.95] font-bold tracking-tight sm:text-7xl lg:text-8xl">
         {site.name}
       </h1>
       <p class="mt-5 font-mono text-sm text-muted sm:text-base">{site.role}</p>
-      <p class="mt-8 max-w-[30ch] text-2xl leading-snug text-muted sm:leading-snug">
+      <p class="mt-8 max-w-[34ch] text-2xl leading-snug text-muted sm:text-3xl sm:leading-snug">
         {pitchBefore}<strong class="font-display font-semibold text-fg">{site.pitchEmphasis[lang]}</strong>{pitchAfter}
       </p>
 
@@ -56,23 +53,25 @@ const button =
           GitHub <span aria-hidden="true">↗</span>
         </a>
       </div>
-      </div>
-
-      <!-- Latest experience and certifications, visible without scrolling on a laptop screen -->
-      <aside
-        class="relative z-10 border-t border-line bg-bg/90 pt-8 backdrop-blur-sm lg:border-t-0 lg:border-l lg:py-2 lg:pt-2 lg:pl-10"
-      >
-        <p class="label mb-3">{t('home.experience')}</p>
-        <Experience lang={lang} />
-        <p class="label mt-5 mb-2">{t('home.education')}</p>
-        <Education lang={lang} />
-        <p class="label mt-5 mb-0.5">{t('home.certifications')}</p>
-        <CertBadges lang={lang} />
-      </aside>
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pt-16 sm:px-6">
+  <section class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="grid gap-12 border-t border-line pt-10 lg:grid-cols-[1.15fr_1fr] lg:gap-20">
+      <div>
+        <p class="label mb-5">{t('home.experience')}</p>
+        <Experience lang={lang} />
+        <p class="label mt-10 mb-3">{t('home.education')}</p>
+        <Education lang={lang} />
+      </div>
+      <div>
+        <p class="label mb-2">{t('home.certifications')}</p>
+        <CertBadges lang={lang} />
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 pt-28 sm:px-6">
     <SectionHead title={t('home.projects')} href={localize(lang, '/projects')} link={t('home.allProjects')} />
     <div class="mt-2 [&>article:first-child]:border-t-0">
       {projects.map((project) => <ProjectRow project={project} lang={lang} />)}

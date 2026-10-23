@@ -183,17 +183,9 @@ body {
   .clouds-mask {
     mask-image:
       linear-gradient(to bottom, #000 45%, transparent),
-      linear-gradient(to right, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.12) 14%, rgb(0 0 0 / 0.12) 54%, #000 74%);
+      linear-gradient(to right, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.12) 14%, rgb(0 0 0 / 0.15) 54%, #000 74%);
     -webkit-mask-composite: source-in;
     mask-composite: intersect;
-  }
-}
-/* With the sidebar: clouds live in the gap between the name and the sidebar, and stop before it */
-@media (min-width: 1024px) {
-  .clouds-mask {
-    mask-image:
-      linear-gradient(to bottom, #000 60%, transparent 92%),
-      linear-gradient(to right, rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.1) 12%, rgb(0 0 0 / 0.15) 32%, #000 44%, #000 50%, transparent 56%);
   }
 }
 

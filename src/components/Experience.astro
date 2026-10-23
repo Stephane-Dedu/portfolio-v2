@@ -9,16 +9,16 @@ const { lang } = Astro.props;
 ---
 
 <div class="font-rounded">
-  <ul class="space-y-4" aria-label={lang === 'fr' ? 'Expérience' : 'Experience'}>
+  <ul class="space-y-6" aria-label={lang === 'fr' ? 'Expérience' : 'Experience'}>
     {
       site.experience.map((item) => (
         <li>
           <p class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-            <span class="text-[17px] leading-snug font-bold">{item.role[lang]}</span>
-            <span class="text-[13px] text-muted">{item.period[lang]}</span>
+            <span class="text-lg font-bold">{item.role[lang]}</span>
+            <span class="text-sm text-muted">{item.period[lang]}</span>
           </p>
-          <p class="text-[15px] font-medium text-muted">{item.company}</p>
-          {item.details && <p class="mt-1 max-w-[62ch] text-[14px] leading-normal text-muted">{item.details[lang]}</p>}
+          <p class="text-base font-medium text-muted">{item.company}</p>
+          {item.details && <p class="mt-2 max-w-[62ch] text-[15px] leading-relaxed text-muted">{item.details[lang]}</p>}
         </li>
       ))
     }

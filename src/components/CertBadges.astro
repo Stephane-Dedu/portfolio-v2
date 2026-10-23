@@ -19,17 +19,17 @@ const verifyLabel = lang === 'fr' ? 'vérifier sur Credly' : 'verify on Credly';
           target="_blank"
           rel="noopener"
           aria-label={`${cert.name}, ${cert.issuer}, ${cert.issued[lang]} (${verifyLabel})`}
-          class="group flex items-center gap-3 py-1.5"
+          class="group flex items-center gap-4 py-3.5"
         >
-          <span class="grid size-8 shrink-0 place-items-center">
+          <span class="grid size-11 shrink-0 place-items-center">
             <CertIcon
               name={cert.icon}
-              class="size-6 transition-transform duration-300 group-hover:scale-110"
+              class="size-7 transition-transform duration-300 group-hover:scale-110"
             />
           </span>
           <span class="min-w-0">
-            <span class="block text-[15px] leading-snug font-bold underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-faint">{cert.name}</span>
-            <span class="mt-0.5 block text-[13px] text-muted">{cert.issuer} · <span class="whitespace-nowrap">{cert.issued[lang]}</span></span>
+            <span class="block text-base leading-snug font-bold underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-faint">{cert.name}</span>
+            <span class="mt-1 block text-sm text-muted">{cert.issuer} · <span class="whitespace-nowrap">{cert.issued[lang]}</span></span>
           </span>
         </a>
       </li>
