@@ -9,7 +9,7 @@ export const site = {
   role: 'DevOps · SRE · Cloud Engineer',
   pitch: {
     en: 'I got into infrastructure from the application side. After a year shipping Python microservices to Kubernetes, I now work on reliability, platform tooling and Kubernetes security.',
-    fr: 'Je suis arrivé à l’infra par le côté applicatif : après un an à livrer des microservices Python sur Kubernetes, je travaille maintenant sur la fiabilité, l’outillage plateforme et la sécurité Kubernetes.',
+    fr: 'Je suis arrivé à l’infra par le côté applicatif : après un an à livrer des microservices Python sur Kubernetes, je travaille maintenant sur la fiabilité, l’outillage plateforme et la sécurité Kubernetes.',
   } as Localized,
   pitchEmphasis: {
     en: 'reliability, platform tooling and Kubernetes security',

@@ -10,7 +10,7 @@ const { lang } = Astro.props;
 const verifyLabel = lang === 'fr' ? 'vérifier sur Credly' : 'verify on Credly';
 ---
 
-<ul class="divide-y divide-line border-y border-line font-rounded" aria-label="Certifications">
+<ul class="space-y-1 font-rounded" aria-label="Certifications">
   {
     site.certs.map((cert) => (
       <li>
@@ -19,9 +19,9 @@ const verifyLabel = lang === 'fr' ? 'vérifier sur Credly' : 'verify on Credly';
           target="_blank"
           rel="noopener"
           aria-label={`${cert.name}, ${cert.issuer}, ${cert.issued[lang]} (${verifyLabel})`}
-          class="group flex items-center gap-4 py-3.5"
+          class="group flex items-center gap-3.5 py-2"
         >
-          <span class="grid size-11 shrink-0 place-items-center">
+          <span class="grid size-9 shrink-0 place-items-center">
             <CertIcon
               name={cert.icon}
               class="size-7 transition-transform duration-300 group-hover:scale-110"

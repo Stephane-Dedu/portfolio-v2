@@ -28,9 +28,12 @@ const button =
 <Base lang={lang}>
   <section class="relative isolate">
     <CloudsBackground client:only="react" />
-    <div class="mx-auto max-w-6xl px-4 pt-14 pb-14 sm:px-6 sm:pt-24 sm:pb-20">
+    <div
+      class="mx-auto grid max-w-6xl gap-12 px-4 pt-14 pb-14 sm:px-6 sm:pt-24 sm:pb-20 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10"
+    >
+      <div>
       <p class="label"><span class="text-accent">~</span> $ whoami</p>
-      <h1 class="mt-4 text-5xl leading-[0.95] font-bold tracking-tight sm:text-7xl lg:text-8xl">
+      <h1 class="mt-4 text-5xl leading-[0.95] font-bold tracking-tight sm:text-7xl">
         {site.name}
       </h1>
       <p class="mt-5 font-mono text-sm text-muted sm:text-base">{site.role}</p>
@@ -53,6 +56,13 @@ const button =
           GitHub <span aria-hidden="true">↗</span>
         </a>
       </div>
+      </div>
+
+      <!-- Certifications float over the clouds: no border, no panel, a halo keeps the text readable -->
+      <div class="text-halo lg:pt-12">
+        <p class="label mb-3">{t('home.certifications')}</p>
+        <CertBadges lang={lang} />
+      </div>
     </div>
   </section>
 
@@ -61,12 +71,10 @@ const button =
       <div>
         <p class="label mb-5">{t('home.experience')}</p>
         <Experience lang={lang} />
-        <p class="label mt-10 mb-3">{t('home.education')}</p>
-        <Education lang={lang} />
       </div>
       <div>
-        <p class="label mb-2">{t('home.certifications')}</p>
-        <CertBadges lang={lang} />
+        <p class="label mb-5">{t('home.education')}</p>
+        <Education lang={lang} />
       </div>
     </div>
   </section>
