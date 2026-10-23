@@ -9,7 +9,11 @@ export const site = {
   role: 'DevOps · SRE · Cloud Engineer',
   pitch: {
     en: 'I got into infrastructure from the application side. After a year shipping Python microservices to Kubernetes, I now work on reliability, platform tooling and Kubernetes security.',
-    fr: 'Je suis arrivé à l’infra par le côté applicatif : après un an à livrer des microservices Python sur Kubernetes, je travaille maintenant sur la fiabilité, l’outillage plateforme et la sécurité Kubernetes.',
+    fr: 'Je suis arrivé à l’infra par le côté applicatif : après un an à livrer des microservices Python sur Kubernetes, je travaille maintenant sur la fiabilité, l’outillage plateforme et la sécurité Kubernetes.',
+  } as Localized,
+  pitchEmphasis: {
+    en: 'reliability, platform tooling and Kubernetes security',
+    fr: 'la fiabilité, l’outillage plateforme et la sécurité Kubernetes',
   } as Localized,
   github: 'https://github.com/Stephane-Dedu',
   linkedin: 'https://www.linkedin.com/in/st%C3%A9phane-dedu-14579a266/',
@@ -18,13 +22,13 @@ export const site = {
     {
       role: { en: 'SRE (apprentice)', fr: 'SRE (alternance)' },
       company: 'Welcome to the Jungle',
-      period: { en: 'Sep 2026 → present', fr: 'sept. 2026 → aujourd’hui' },
+      period: { en: 'Sep 2026 - present', fr: 'sept. 2026 - aujourd’hui' },
       current: true,
     },
     {
       role: { en: 'Backend & Agentic developer (apprentice)', fr: 'Développeur Backend & Agentic (alternance)' },
       company: 'Swapn',
-      period: { en: 'Oct 2025 → Sep 2026', fr: 'oct. 2025 → sept. 2026' },
+      period: { en: 'Oct 2025 - Sep 2026', fr: 'oct. 2025 - sept. 2026' },
       details: {
         en: 'Async FastAPI microservices, PostgreSQL/pgvector, Redis, Celery and LLM agents on AWS Bedrock, deployed to Kubernetes with Helm, CI/CD and Prometheus monitoring. Bedrock costs cut by 40% (prompt caching, ElastiCache).',
         fr: 'Microservices FastAPI async, PostgreSQL/pgvector, Redis, Celery et agents LLM sur AWS Bedrock, déployés sur Kubernetes avec Helm, CI/CD et monitoring Prometheus. Coûts Bedrock réduits de 40 % (prompt caching, ElastiCache).',
@@ -35,7 +39,7 @@ export const site = {
     {
       degree: { en: 'Master’s in DevOps, Cloud & Infrastructure', fr: 'Mastère DevOps, Cloud & Infrastructure' },
       school: 'Sup de Vinci',
-      period: '2026 → 2028',
+      period: '2026 - 2028',
     },
   ] as { degree: Localized; school: string; period: string }[],
   // Newest first. verify: public Credly page
@@ -75,9 +79,3 @@ export const site = {
   ] as { code: string; name: string; issuer: string; issued: Localized; icon: CertIconName; verify: string }[],
 };
 
-/** In a two-column grid, the last non-featured card spans both columns when it would sit alone. */
-export const isWide = (projects: { data: { featured: boolean } }[], index: number) => {
-  if (projects[index].data.featured) return true;
-  const regular = projects.filter((p) => !p.data.featured);
-  return regular.length % 2 === 1 && regular.at(-1) === projects[index];
-};

@@ -9,6 +9,10 @@ facts:
   - GitHub Actions deployment over OIDC, no stored AWS key
   - Hashed assets cached as immutable, HTML always revalidated
   - JavaScript only loaded where there is interaction
+story:
+  problem: "The first version preloaded close to 600 font files on every visit."
+  decision: "A static Astro site with JavaScript only where there is interaction, deployed by GitHub Actions over OIDC."
+  result: "No AWS key stored anywhere; hashed assets cached as immutable, HTML always revalidated."
 tags: [Astro, S3, CloudFront, GitHub Actions, OIDC]
 ---
 

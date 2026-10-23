@@ -9,6 +9,10 @@ facts:
   - Déploiement GitHub Actions en OIDC, sans clé AWS stockée
   - Assets hashés en cache immutable, HTML toujours revalidé
   - JavaScript chargé uniquement là où il y a de l’interaction
+story:
+  problem: "La première version préchargeait près de 600 fichiers de police à chaque visite."
+  decision: "Un site Astro statique, avec du JavaScript seulement là où il y a de l’interaction, déployé par GitHub Actions en OIDC."
+  result: "Aucune clé AWS stockée ; assets hashés en cache immutable, HTML toujours revalidé."
 tags: [Astro, S3, CloudFront, GitHub Actions, OIDC]
 ---
 
