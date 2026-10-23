@@ -50,7 +50,7 @@ export default function CommandPalette({ items, strings }: { items: Item[]; stri
       onOpenChange={setOpen}
       label={strings.label}
       overlayClassName="fixed inset-0 z-50 bg-black/25 backdrop-blur-[2px]"
-      contentClassName="fixed left-1/2 top-[16vh] z-50 w-[min(560px,calc(100vw-32px))] -translate-x-1/2 overflow-hidden rounded-xl border border-line bg-surface text-fg shadow-2xl shadow-black/20"
+      contentClassName="fixed left-1/2 top-[16vh] z-50 font-mono w-[min(560px,calc(100vw-32px))] -translate-x-1/2 overflow-hidden rounded-xl border border-line bg-surface text-fg shadow-2xl shadow-black/20"
     >
       <Command.Input
         placeholder={strings.placeholder}

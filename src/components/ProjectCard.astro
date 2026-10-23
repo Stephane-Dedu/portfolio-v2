@@ -35,9 +35,9 @@ const { title, summary, tags, status, scope, year, facts } = project.data;
       >
         {title}
       </h3>
-      <p class="mt-2 max-w-[60ch] text-sm leading-relaxed text-muted">{summary}</p>
+      <p class="mt-2 max-w-[60ch] text-base leading-relaxed text-muted sm:text-[17px]">{summary}</p>
     </div>
-    <ul class:list={['space-y-1 text-[13px]', wide ? 'mt-5 md:mt-1' : 'mt-5']} aria-label={t('card.facts')}>
+    <ul class:list={['space-y-1 text-base', wide ? 'mt-5 md:mt-1' : 'mt-5']} aria-label={t('card.facts')}>
       {
         facts.map((fact) => (
           <li class="flex gap-2">

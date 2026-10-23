@@ -29,12 +29,12 @@ const posts = inLang(await getCollection('blog'), lang).sort((a, b) => b.data.da
               <span class="label pt-1.5">{formatMonth(post.data.date, lang)}</span>
               <span>
                 <span
-                  class="block text-xl font-medium tracking-tight transition-colors group-hover:text-accent sm:text-2xl"
+                  class="block font-display text-xl font-semibold tracking-tight transition-colors group-hover:text-accent sm:text-2xl"
                   style={`view-transition-name: post-${entrySlug(post.id)}`}
                 >
                   {post.data.title}
                 </span>
-                <span class="mt-2 block max-w-[62ch] leading-relaxed text-muted">{post.data.excerpt}</span>
+                <span class="mt-2 block max-w-[62ch] text-lg leading-relaxed text-muted">{post.data.excerpt}</span>
                 <span class="label mt-3 flex flex-wrap gap-x-3">
                   <span>
                     {readingTime(post.body)} {t('blog.read')}

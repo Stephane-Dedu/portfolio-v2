@@ -13,6 +13,19 @@ npm run build    # static site in dist/
 
 Node 22.22+ (`.tool-versions` pins 24.21.0 for asdf).
 
+## Fonts
+
+| Use | Font | Source |
+| --- | --- | --- |
+| Titles | Eczar (Rosetta Type, OFL) | `@fontsource-variable/eczar` |
+| Running text | Wremena Light (Temporary State, free) | `public/fonts/wremena/`, not in npm |
+| Code, labels, terminal UI | JetBrains Mono | `@fontsource-variable/jetbrains-mono` |
+| Experience, certifications | M PLUS Rounded 1c (latin subset) | `@fontsource/m-plus-rounded-1c` |
+
+Wremena comes from [type.tmpstate.net](https://type.tmpstate.net/preview/Wremena) (free "order"). Put the WOFF2 files in
+`public/fonts/wremena/` as `Wremena-Light.woff2`, `Wremena-Regular.woff2` and `Wremena-Bold.woff2`; the
+`@font-face` rules are at the top of `src/styles/global.css`. Until they are there, text falls back to Iowan Old Style / Georgia.
+
 ## Where things are
 
 ```
