@@ -49,6 +49,12 @@ src/
 - **Project:** `src/content/projects/en/<slug>.mdx` and `fr/<slug>.mdx`. `facts` (3 max) show on the card, `featured: true` makes it the full-width card, `order` sorts the list.
 - **Post:** same thing in `src/content/blog/{en,fr}/`.
 
+## For LLMs
+
+`/llms.txt` (format from [llmstxt.org](https://llmstxt.org)) is generated at build time from the same data as the site:
+identity, experience, certifications, projects and posts. Every project and post also has a plain Markdown version at
+its URL plus `.md` (`/projects/fissure.md`, `/fr/blog/cks.md`…). The code is in `src/lib/llms.ts`.
+
 ## Deploy
 
 `.github/workflows/deploy.yml` builds, syncs `dist/` to S3 (hashed assets cached as immutable, HTML always revalidated) and invalidates CloudFront, with an AWS role assumed over OIDC. It is skipped until these repository variables exist: `AWS_ROLE_ARN`, `AWS_REGION`, `S3_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`.
