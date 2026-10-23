@@ -24,11 +24,11 @@ const verifyLabel = lang === 'fr' ? 'vérifier sur Credly' : 'verify on Credly';
           <span class="grid size-9 shrink-0 place-items-center">
             <CertIcon
               name={cert.icon}
-              class="size-7 transition-transform duration-300 group-hover:scale-110"
+              class="size-6 opacity-85 transition-[opacity,transform] duration-300 group-hover:scale-110 group-hover:opacity-100"
             />
           </span>
           <span class="min-w-0">
-            <span class="block text-base leading-snug font-bold underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-faint">{cert.name}</span>
+            <span class="block text-base leading-snug font-medium text-fg/90 underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-faint">{cert.name}</span>
             <span class="mt-1 block text-sm text-muted">{cert.issuer} · <span class="whitespace-nowrap">{cert.issued[lang]}</span></span>
           </span>
         </a>

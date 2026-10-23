@@ -192,13 +192,12 @@ body {
 /* Readable text over the ASCII clouds without a panel: a halo in the page color */
 .text-halo {
   text-shadow:
-    0 0 2px var(--bg),
-    0 0 6px var(--bg),
-    0 0 12px var(--bg),
-    0 0 18px var(--bg);
+    0 0 1px var(--bg),
+    0 0 4px var(--bg),
+    0 0 9px var(--bg);
 }
 .text-halo svg {
-  filter: drop-shadow(0 0 4px var(--bg)) drop-shadow(0 0 8px var(--bg));
+  filter: drop-shadow(0 0 3px var(--bg));
 }
 
 @keyframes pod-in {
