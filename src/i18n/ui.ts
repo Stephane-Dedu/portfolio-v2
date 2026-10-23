@@ -143,8 +143,12 @@ export const useTranslations = (lang: Lang) => (key: UIKey) => ui[lang][key];
 export const localize = (lang: Lang, path: string) =>
   lang === defaultLang ? path : `/${lang}${path === '/' ? '' : path}`;
 
-/** Drop the language prefix from a pathname: '/fr/blog/x' → '/blog/x'. */
-export const unlocalize = (pathname: string) => pathname.replace(/^\/fr(?=\/|$)/, '') || '/';
+/** Clean path without language prefix: '/fr/blog/x.html' → '/blog/x', '/fr.html' → '/'. */
+export const unlocalize = (pathname: string) =>
+  pathname
+    .replace(/(\/index)?\.html$/, '')
+    .replace(/\/$/, '')
+    .replace(/^\/fr(?=\/|$)/, '') || '/';
 
 // Content entries live in <collection>/<lang>/<slug>.mdx
 export const entryLang = (id: string) => id.split('/')[0] as Lang;

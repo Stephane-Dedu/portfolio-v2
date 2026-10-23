@@ -10,6 +10,10 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: 'https://sdedu.cloud',
   devToolbar: { enabled: false },
+  // The CloudFront distribution appends .html to extensionless paths (/blog → blog.html),
+  // so pages are built as files and links never end with a slash
+  build: { format: 'file' },
+  trailingSlash: 'never',
   // English at the root, French under /fr
   i18n: {
     locales: ['en', 'fr'],

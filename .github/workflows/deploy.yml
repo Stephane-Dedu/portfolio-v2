@@ -45,8 +45,16 @@ jobs:
       - name: Sync everything else
         run: |
           aws s3 sync dist/ "s3://${{ vars.S3_BUCKET }}" \
-            --exclude "_astro/*" \
+            --exclude "_astro/*" --exclude "*.md" \
             --cache-control "public,max-age=0,must-revalidate" --delete
+
+      # Markdown versions for LLMs (see /llms.txt); S3 would guess a generic type
+      - name: Sync Markdown pages
+        run: |
+          aws s3 sync dist/ "s3://${{ vars.S3_BUCKET }}" \
+            --exclude "*" --include "*.md" \
+            --content-type "text/markdown; charset=utf-8" \
+            --cache-control "public,max-age=0,must-revalidate"
 
       - name: Invalidate CloudFront
         run: |

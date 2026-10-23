@@ -104,7 +104,7 @@ export async function llmsTxt(siteUrl: URL) {
       .map((item) => `- ${item.role.en}, ${item.company}, ${item.period.en}${item.details ? `. ${item.details.en}` : ''}`)
       .join('\n')}`,
     `Education:\n${site.education.map((item) => `- ${item.degree.en}, ${item.school}, ${item.period}`).join('\n')}`,
-    `The site is in English at ${url('/')} and in French under ${url('/fr/')}, with the same paths. Every project and post below is also available as Markdown at its URL plus \`.md\`.`,
+    `The site is in English at ${url('/')} and in French under ${url('/fr')}, with the same paths. Every project and post below is also available as Markdown at its URL plus \`.md\`.`,
     `## Projects\n${en.projects
       .map((project) => `- [${project.data.title}](${url(`/projects/${entrySlug(project.id)}.md`)}): ${project.data.summary}`)
       .join('\n')}`,
@@ -116,7 +116,7 @@ export async function llmsTxt(siteUrl: URL) {
       .join('\n')}`,
     `## Contact\n- [CV (PDF)](${url(site.cv)})\n- [GitHub](${site.github})\n- [LinkedIn](${site.linkedin})`,
     `## Optional\n${[
-      `- [Version française](${url('/fr/')}): same content in French`,
+      `- [Version française](${url('/fr')}): same content in French`,
       ...fr.projects.map((project) => `- [${project.data.title} (FR)](${url(`/fr/projects/${entrySlug(project.id)}.md`)})`),
       ...fr.posts.map((post) => `- [${post.data.title}](${url(`/fr/blog/${entrySlug(post.id)}.md`)})`),
     ].join('\n')}`,
