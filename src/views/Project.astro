@@ -10,7 +10,7 @@ interface Props {
 const { project, lang } = Astro.props;
 const t = useTranslations(lang);
 const slug = entrySlug(project.id);
-const { title, summary, tags, status, scope, facts, links } = project.data;
+const { title, summary, tags, status, facts, links } = project.data;
 const { Content } = await render(project);
 const post = project.data.post ? await getEntry('blog', `${lang}/${project.data.post}`) : undefined;
 const allLinks = [
@@ -25,10 +25,8 @@ const allLinks = [
 
     <header class="mt-10 grid gap-10 border-b border-line pb-10 lg:grid-cols-[1fr_320px]">
       <div>
-        <p class="label">
-          {t(`scope.${scope}` as const)} · {status === 'wip' ? t('card.wip') : t('project.live')}
-        </p>
-        <h1 class="mt-3 text-4xl font-bold tracking-tight sm:text-5xl" style={`view-transition-name: project-${slug}`}>
+        {status === 'wip' && <p class="label mb-3">{t('card.wip')}</p>}
+        <h1 class="text-4xl font-bold tracking-tight sm:text-5xl" style={`view-transition-name: project-${slug}`}>
           {title}
         </h1>
         <p class="mt-4 max-w-2xl leading-relaxed text-muted">{summary}</p>
