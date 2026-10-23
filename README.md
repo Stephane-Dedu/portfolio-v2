@@ -37,7 +37,7 @@ src/
 ├── views/                             page bodies shared by / and /fr
 ├── pages/, pages/fr/                  thin routes
 ├── components/
-│   ├── clouds/                        ASCII clouds behind the hero (?clouds=dither for the WebGL version)
+│   ├── clouds/                        ASCII clouds behind the hero (sky/ by default, ?clouds=ascii or ?clouds=dither)
 │   ├── lab/                           k9s simulator (cluster.ts is the scheduler) and globe
 │   └── FissureScrolly.astro           architecture that builds itself on scroll
 ├── layouts/Base.astro                 head, header, footer, ⌘K palette
