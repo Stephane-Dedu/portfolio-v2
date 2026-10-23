@@ -22,13 +22,13 @@ export const site = {
     {
       role: { en: 'SRE (apprentice)', fr: 'SRE (alternance)' },
       company: 'Welcome to the Jungle',
-      period: { en: 'Sep 2026 → present', fr: 'sept. 2026 → aujourd’hui' },
+      period: { en: 'Sep 2026 - present', fr: 'sept. 2026 - aujourd’hui' },
       current: true,
     },
     {
       role: { en: 'Backend & Agentic developer (apprentice)', fr: 'Développeur Backend & Agentic (alternance)' },
       company: 'Swapn',
-      period: { en: 'Oct 2025 → Sep 2026', fr: 'oct. 2025 → sept. 2026' },
+      period: { en: 'Oct 2025 - Sep 2026', fr: 'oct. 2025 - sept. 2026' },
       details: {
         en: 'Async FastAPI microservices, PostgreSQL/pgvector, Redis, Celery and LLM agents on AWS Bedrock, deployed to Kubernetes with Helm, CI/CD and Prometheus monitoring. Bedrock costs cut by 40% (prompt caching, ElastiCache).',
         fr: 'Microservices FastAPI async, PostgreSQL/pgvector, Redis, Celery et agents LLM sur AWS Bedrock, déployés sur Kubernetes avec Helm, CI/CD et monitoring Prometheus. Coûts Bedrock réduits de 40 % (prompt caching, ElastiCache).',
@@ -39,7 +39,7 @@ export const site = {
     {
       degree: { en: 'Master’s in DevOps, Cloud & Infrastructure', fr: 'Mastère DevOps, Cloud & Infrastructure' },
       school: 'Sup de Vinci',
-      period: '2026 → 2028',
+      period: '2026 - 2028',
     },
   ] as { degree: Localized; school: string; period: string }[],
   // Newest first. verify: public Credly page
