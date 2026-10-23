@@ -13,10 +13,10 @@ const { lang } = Astro.props;
     site.education.map((item) => (
       <li>
         <p class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-          <span class="text-base font-bold">{item.degree[lang]}</span>
-          <span class="text-sm text-muted">{item.period}</span>
+          <span class="text-[15px] leading-snug font-bold">{item.degree[lang]}</span>
+          <span class="text-[13px] text-muted">{item.period}</span>
         </p>
-        <p class="text-[15px] font-medium text-muted">{item.school}</p>
+        <p class="text-[14px] font-medium text-muted">{item.school}</p>
       </li>
     ))
   }
