@@ -1,0 +1,580 @@
+---
+// The projects drawn as a Kubernetes cluster: a project's scope is its namespace, each project a deployment
+// whose pod runs its stack, and an ingress routes the visitor to them. Picking a deployment shows its
+// `kubectl describe` below. Resource words (namespace, Running, Labels…) stay in English on purpose, like
+// the labels of ProjectDiagram. Without JS the cards are links to their panel (:target); the wires and the
+// traffic are drawn by the script once the layout is known.
+import type { CollectionEntry } from 'astro:content';
+import ProjectDiagram from './ProjectDiagram.astro';
+import { entrySlug, localize, useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  projects: CollectionEntry<'projects'>[];
+  lang: Lang;
+}
+const { projects, lang } = Astro.props;
+const t = useTranslations(lang);
+
+const namespaces = (['prod', 'lab', 'side'] as const)
+  .map((name) => ({ name, projects: projects.filter((p) => p.data.scope === name) }))
+  .filter((ns) => ns.projects.length > 0);
+const selected = (projects.find((p) => p.data.featured) ?? projects[0])?.id;
+// Containers shown in a card's pod; the rest are counted
+const shown = 4;
+---
+
+<div data-cluster class="cluster relative" style={`--n: ${projects.length}`}>
+  <svg data-wires class="wires" aria-hidden="true"><g data-wire-group></g></svg>
+
+  <div class="entry">
+    <span data-visitor class="visitor">{t('cluster.you')}</span>
+  </div>
+
+  <div data-frame class="frame">
+    <div class="ingress">
+      <span class="text-muted">ingress</span><b class="font-semibold">sdedu.cloud</b><span class="text-faint">· tls</span>
+    </div>
+
+    <div class="namespaces">
+      {
+        namespaces.map((ns) => (
+          <section data-ns class="ns" style={`--span: ${ns.projects.length}`} aria-label={`namespace ${ns.name}`}>
+            <div class="workloads">
+              {ns.projects.map((project) => {
+                const slug = entrySlug(project.id);
+                const { title, tags, status, year } = project.data;
+                const wip = status === 'wip';
+                return (
+                  <a
+                    href={`#describe-${slug}`}
+                    data-select={slug}
+                    aria-controls={`describe-${slug}`}
+                    aria-current={project.id === selected ? 'true' : 'false'}
+                    class:list={['workload', { pending: wip }]}
+                  >
+                    <span class="flex items-center justify-between gap-3 font-mono text-[11px] text-muted">
+                      <span class="truncate">deploy/{slug}</span>
+                      <span class="status shrink-0">
+                        <i class="dot" aria-hidden="true" />
+                        {wip ? 'Pending' : 'Running'}
+                      </span>
+                    </span>
+                    <span
+                      class="mt-2 block font-display text-xl leading-tight font-semibold tracking-tight"
+                      style={`view-transition-name: project-${slug}`}
+                    >
+                      {title}
+                    </span>
+                    <span class="pod">
+                      {tags.slice(0, shown).map((tag) => (
+                        <span class="chip">{tag}</span>
+                      ))}
+                      {tags.length > shown && <span class="chip more">+{tags.length - shown}</span>}
+                    </span>
+                    <span class="mt-auto block pt-3 font-mono text-[11px] text-muted">
+                      ready {wip ? '0/1' : '1/1'} · {t('cluster.since')} {year}
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+            <p class="frame-label">
+              namespace/{ns.name} <span class="text-faint">· {t(`ns.${ns.name}`)}</span>
+            </p>
+          </section>
+        ))
+      }
+    </div>
+    <p class="frame-label">cluster/sdedu-cloud</p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 font-mono text-xs text-muted">
+    <p>{t('cluster.hint')}</p>
+    <p class="flex gap-4">
+      <span class="status"><i class="dot" aria-hidden="true" />Running</span>
+      <span class="status pending"><i class="dot" aria-hidden="true" />Pending</span>
+    </p>
+  </div>
+
+  {
+    projects.map((project) => {
+      const slug = entrySlug(project.id);
+      const href = localize(lang, `/projects/${slug}`);
+      const { title, summary, tags, status, scope, year, facts, links, story } = project.data;
+      const wip = status === 'wip';
+      const events = [
+        [t('story.problem'), story.problem],
+        [t('story.decision'), story.decision],
+        [t('story.result'), story.result],
+      ];
+      return (
+        <article
+          id={`describe-${slug}`}
+          data-describe={slug}
+          data-active={project.id === selected ? '' : undefined}
+          class="describe"
+          aria-label={`kubectl describe deploy/${slug}`}
+        >
+          <div>
+            <p class="label">
+              <span class="text-accent">$</span> kubectl describe deploy/{slug} -n {scope}
+            </p>
+            <h3 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+              <a href={href} class="transition-colors hover:text-accent">
+                {title}
+              </a>
+            </h3>
+            <p class="mt-4 max-w-[58ch] text-lg leading-relaxed text-muted sm:text-xl">{summary}</p>
+
+            <dl class="kv mt-8">
+              <dt>Namespace</dt>
+              <dd>
+                {scope} <span class="text-muted">· {t(`ns.${scope}`)}</span>
+              </dd>
+              <dt>Status</dt>
+              <dd class:list={['status', { pending: wip }]}>
+                <i class="dot" aria-hidden="true" />
+                {wip ? `Pending · ${t('card.wip')}` : `Running · ${t('cluster.since')} ${year}`}
+              </dd>
+              <dt>Labels</dt>
+              <dd class="flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <span class="chip">{tag}</span>
+                ))}
+              </dd>
+              <dt>Annotations</dt>
+              <dd>
+                <ul class="space-y-1">
+                  {facts.map((fact) => (
+                    <li>{fact}</li>
+                  ))}
+                </ul>
+              </dd>
+              {links.length > 0 && (
+                <>
+                  <dt>Endpoints</dt>
+                  <dd class="flex flex-wrap gap-x-5 gap-y-1">
+                    {links.map((link) => (
+                      <a href={link.href} target="_blank" rel="noopener" class="link">
+                        {link.label} <span aria-hidden="true">↗</span>
+                      </a>
+                    ))}
+                  </dd>
+                </>
+              )}
+              <dt>Events</dt>
+              <dd>
+                <dl class="space-y-4">
+                  {events.map(([reason, message]) => (
+                    <div class="grid gap-1 sm:grid-cols-[88px_1fr] sm:gap-5">
+                      <dt class="label pt-1">{reason}</dt>
+                      <dd class="max-w-[62ch] text-[17px] leading-relaxed">{message}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </dd>
+            </dl>
+
+            <a
+              href={href}
+              class="group mt-8 inline-flex items-center gap-1.5 font-mono text-sm underline decoration-faint underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+            >
+              {t('row.read')}
+              <span class="transition-transform group-hover:translate-x-0.5" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </div>
+
+          <figure class="self-start lg:pt-9">
+            <a href={href} tabindex="-1" aria-hidden="true" class="block opacity-90 transition-opacity hover:opacity-100">
+              <ProjectDiagram slug={slug} />
+            </a>
+            <figcaption class="label mt-3 border-t border-line pt-2">
+              {t('row.fig')} · {title}
+            </figcaption>
+          </figure>
+        </article>
+      );
+    })
+  }
+</div>
+
+<style>
+  .cluster {
+    --gutter: 1.75rem; /* left lane for the wires while namespaces are stacked */
+  }
+  .wires {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .wires :global(path) {
+    fill: none;
+    stroke: var(--faint);
+    stroke-width: 1.1;
+    transition: stroke 150ms;
+  }
+  .wires :global(path.is-hover) {
+    stroke: var(--fg);
+  }
+  .wires :global(path.is-selected) {
+    stroke: var(--accent);
+    stroke-width: 1.4;
+  }
+  .wires :global(circle) {
+    fill: var(--accent);
+  }
+
+  .entry {
+    display: flex;
+    padding-left: calc(var(--gutter) + 0.5rem);
+    margin-bottom: 1.75rem;
+  }
+  .visitor,
+  .ingress {
+    position: relative;
+    z-index: 1;
+    background: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+  .visitor {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.2rem 0.75rem;
+    color: var(--muted);
+  }
+
+  .frame {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 0.9rem;
+    padding: 1rem 0.75rem 0.6rem var(--gutter);
+  }
+  .ingress {
+    display: flex;
+    gap: 0.45rem;
+    width: fit-content;
+    border: 1px solid color-mix(in oklab, var(--fg) 45%, transparent);
+    border-radius: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    margin-bottom: 2rem;
+  }
+  .frame-label {
+    margin-top: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .namespaces {
+    display: grid;
+    gap: 1rem;
+  }
+  .ns {
+    display: flex;
+    flex-direction: column;
+    border: 1px dashed var(--faint);
+    border-radius: 0.7rem;
+    padding: 1rem 0.75rem 0.5rem;
+  }
+  .workloads {
+    flex: 1;
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    .workloads {
+      grid-template-columns: repeat(min(var(--span), 2), minmax(0, 1fr));
+    }
+  }
+  /* Side by side: one column per deployment, namespaces as wide as their deployments, wires from above */
+  @media (min-width: 1024px) {
+    .cluster {
+      --gutter: 1rem;
+    }
+    .entry {
+      justify-content: center;
+      padding-left: 0;
+    }
+    .frame {
+      padding-right: var(--gutter);
+    }
+    .ingress {
+      margin-inline: auto;
+    }
+    .namespaces {
+      grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    }
+    .ns {
+      grid-column: span var(--span);
+    }
+    .workloads {
+      grid-template-columns: repeat(var(--span), minmax(0, 1fr));
+    }
+  }
+
+  .workload {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid color-mix(in oklab, var(--fg) 30%, transparent);
+    border-radius: 0.55rem;
+    padding: 0.75rem 0.85rem 0.8rem;
+    transition:
+      border-color 150ms,
+      box-shadow 150ms;
+  }
+  .workload.pending {
+    border-style: dashed;
+  }
+  .workload:hover {
+    border-color: var(--fg);
+  }
+  .workload[aria-current='true'] {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent);
+  }
+  .workload[aria-current='true'] .font-display {
+    color: var(--accent);
+  }
+
+  /* The pod and its containers (the project's stack) */
+  .pod {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.75rem;
+    padding: 0.45rem;
+    border: 1px dashed var(--line);
+    border-radius: 0.45rem;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 1px solid var(--line);
+    border-radius: 0.3rem;
+    background: var(--bg);
+    padding: 0.05rem 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .chip::before {
+    content: '';
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 0.1rem;
+    background: color-mix(in oklab, var(--fg) 35%, transparent);
+  }
+  .chip.more::before {
+    display: none;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--ok);
+  }
+  .pending .dot {
+    background: transparent;
+    border: 1px dashed var(--muted);
+  }
+
+  /* The describe panel: one at a time */
+  .describe {
+    display: none;
+    gap: 2.5rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+  .describe[data-active] {
+    display: grid;
+  }
+  /* No JS: a panel opened by its link replaces the default one */
+  .cluster:not(.js):has(.describe:target) .describe[data-active] {
+    display: none;
+  }
+  .cluster:not(.js) .describe:target {
+    display: grid;
+  }
+  @media (min-width: 1024px) {
+    .describe {
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 4rem;
+    }
+  }
+  .kv {
+    display: grid;
+    gap: 0.35rem 1.5rem;
+  }
+  .kv > dt {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .kv > dd {
+    margin-bottom: 0.65rem;
+  }
+  @media (min-width: 640px) {
+    .kv {
+      grid-template-columns: 112px minmax(0, 1fr);
+    }
+    .kv > dd {
+      margin-bottom: 0.4rem;
+    }
+  }
+  .link {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+    text-underline-offset: 4px;
+    transition:
+      color 150ms,
+      text-decoration-color 150ms;
+  }
+  .link:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+</style>
+
+<script>
+  type Point = [number, number];
+  const SVG = 'http://www.w3.org/2000/svg';
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // An orthogonal route with rounded corners; repeated and collinear points are dropped first
+  function route(points: Point[], radius = 8) {
+    const pts: Point[] = [];
+    for (const [x, y] of points.map(([x, y]) => [Math.round(x * 2) / 2, Math.round(y * 2) / 2])) {
+      const [a, b] = [pts[pts.length - 2], pts[pts.length - 1]];
+      if (b && b[0] === x && b[1] === y) continue;
+      if (a && b && ((a[0] === b[0] && b[0] === x) || (a[1] === b[1] && b[1] === y))) pts[pts.length - 1] = [x, y];
+      else pts.push([x, y]);
+    }
+    let d = `M${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const [[px, py], [x, y], [nx, ny]] = [pts[i - 1], pts[i], pts[i + 1]];
+      const r = Math.min(radius, Math.hypot(x - px, y - py) / 2, Math.hypot(nx - x, ny - y) / 2);
+      d += ` L${x - Math.sign(x - px) * r} ${y - Math.sign(y - py) * r}`;
+      d += ` Q${x} ${y} ${x + Math.sign(nx - x) * r} ${y + Math.sign(ny - y) * r}`;
+    }
+    const [lx, ly] = pts[pts.length - 1];
+    return `${d} L${lx} ${ly}`;
+  }
+
+  // One wire per deployment, from the visitor through the ingress. Side by side, the wires branch off a bus
+  // above the namespaces; stacked, they run down a lane on the left and branch into the first card of each
+  // row from its side, and into the others from above.
+  function draw(root: HTMLElement) {
+    const box = root.getBoundingClientRect();
+    const rel = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return { left: r.left - box.left, top: r.top - box.top, bottom: r.bottom - box.top, cx: r.left + r.width / 2 - box.left };
+    };
+    const visitor = rel(root.querySelector('[data-visitor]')!);
+    const frame = rel(root.querySelector('[data-frame]')!);
+    const nsTop = Math.min(...[...root.querySelectorAll('[data-ns]')].map((ns) => rel(ns).top));
+    const cards = [...root.querySelectorAll<HTMLElement>('[data-select]')];
+    const rects = cards.map(rel);
+    const sameRow = (a: (typeof rects)[number], b: (typeof rects)[number]) => Math.abs(a.top - b.top) < 4;
+    const oneRow = rects.every((r) => sameRow(r, rects[0]));
+    const [x0, y0, bus, lane] = [visitor.cx, visitor.bottom, nsTop - 14, frame.left + 14];
+
+    const group = root.querySelector('[data-wire-group]')!;
+    group.replaceChildren(
+      ...cards.map((card, i) => {
+        const { left, cx, top } = rects[i];
+        const first = !rects.some((other) => sameRow(other, rects[i]) && other.left < left - 1);
+        const points: Point[] = oneRow
+          ? [[x0, y0], [x0, bus], [cx, bus], [cx, top]]
+          : first
+            ? [[x0, y0], [x0, bus], [lane, bus], [lane, top + 22], [left, top + 22]]
+            : [[x0, y0], [x0, bus], [lane, bus], [lane, top - 8], [cx, top - 8], [cx, top]];
+        const path = document.createElementNS(SVG, 'path');
+        path.setAttribute('d', route(points));
+        path.dataset.wire = card.dataset.select;
+        if (card.matches(':hover')) path.classList.add('is-hover');
+        return path;
+      }),
+    );
+    sync(root);
+  }
+
+  // The selected deployment's wire in the accent color, on top of the shared trunk, with a packet running down it
+  function sync(root: HTMLElement) {
+    const current = root.querySelector<HTMLElement>('[data-select][aria-current="true"]')?.dataset.select;
+    const group = root.querySelector('[data-wire-group]')!;
+    group.querySelector('circle')?.remove();
+    const wire = [...group.querySelectorAll<SVGPathElement>('path')].find((p) => {
+      p.classList.toggle('is-selected', p.dataset.wire === current);
+      return p.dataset.wire === current;
+    });
+    if (!wire) return;
+    group.append(wire);
+    if (reduceMotion) return;
+    const packet = document.createElementNS(SVG, 'circle');
+    packet.setAttribute('r', '3');
+    const motion = document.createElementNS(SVG, 'animateMotion');
+    motion.setAttribute('path', wire.getAttribute('d')!);
+    motion.setAttribute('dur', `${Math.max(1.2, wire.getTotalLength() / 240).toFixed(2)}s`);
+    motion.setAttribute('repeatCount', 'indefinite');
+    packet.append(motion);
+    group.append(packet);
+  }
+
+  function select(root: HTMLElement, slug: string) {
+    root
+      .querySelectorAll('[data-select]')
+      .forEach((card) => card.setAttribute('aria-current', String((card as HTMLElement).dataset.select === slug)));
+    root
+      .querySelectorAll<HTMLElement>('[data-describe]')
+      .forEach((panel) => panel.toggleAttribute('data-active', panel.dataset.describe === slug));
+    sync(root);
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-cluster]').forEach((root) => {
+    root.classList.add('js');
+    const hashed = location.hash.replace('#describe-', '');
+    if (hashed && root.querySelector(`[data-describe="${CSS.escape(hashed)}"]`)) select(root, hashed);
+
+    root.querySelectorAll<HTMLAnchorElement>('[data-select]').forEach((card) => {
+      const slug = card.dataset.select!;
+      const wire = (on: boolean) => root.querySelector(`[data-wire="${CSS.escape(slug)}"]`)?.classList.toggle('is-hover', on);
+      card.addEventListener('pointerenter', () => wire(true));
+      card.addEventListener('pointerleave', () => wire(false));
+      card.addEventListener('click', (event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        select(root, slug);
+        // Scroll only when the panel starts below the fold. Lenis (on html.lenis) scrolls to the card's
+        // #anchor by itself if the click reaches it, so it only gets the click when a scroll is wanted.
+        const top = root.querySelector(`#describe-${CSS.escape(slug)}`)!.getBoundingClientRect().top;
+        if (top < innerHeight * 0.8) event.stopPropagation();
+        else if (!document.documentElement.classList.contains('lenis'))
+          window.scrollBy({ top: top - 88, behavior: reduceMotion ? 'auto' : 'smooth' });
+      });
+    });
+
+    new ResizeObserver(() => draw(root)).observe(root);
+    document.fonts?.ready.then(() => draw(root));
+  });
+</script>
